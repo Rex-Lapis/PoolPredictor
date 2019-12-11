@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="PoolPredictor" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Main.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="373">
+              <caret line="612" column="40" lean-forward="true" selection-start-line="612" selection-start-column="40" selection-end-line="612" selection-end-column="40" />
+              <folding>
+                <element signature="e#883#6717#0" />
+                <element signature="e#5222#5274#0" />
+                <element signature="e#7613#9277#0" />
+                <element signature="e#8502#8526#0" />
+                <element signature="e#8795#10824#0" />
+                <element signature="e#9781#9811#0" />
+                <element signature="e#11574#12328#0" />
+                <element signature="e#11536#15883#0" />
+                <element signature="e#11578#13526#0" />
+                <element signature="e#11754#11882#0" />
+                <element signature="e#11942#12076#0" />
+                <element signature="e#12134#12264#0" />
+                <element signature="e#12323#12455#0" />
+                <element signature="e#14296#14319#0" />
+                <element signature="e#15789#15833#0" />
+                <element signature="e#11192#11805#0" />
+                <element signature="e#11869#12397#0" />
+                <element signature="e#12503#15375#0" />
+                <element signature="e#13710#13974#0" />
+                <element signature="e#13482#14830#0" />
+                <element signature="e#14507#14833#0" />
+                <element signature="e#14604#14833#0" />
+                <element signature="e#22071#23376#0" />
+                <element signature="e#24770#25273#0" />
+                <element signature="e#15880#15912#0" />
+                <element signature="e#18996#19428#0" />
+                <element signature="e#19659#19827#0" />
+                <element signature="e#14978#14979#0" />
+                <element signature="e#15187#15299#0" />
+                <element signature="e#15347#15503#0" />
+                <element signature="e#15544#15630#0" />
+                <element signature="e#15696#16045#0" />
+                <element signature="e#16086#16612#0" />
+                <element signature="e#16229#16612#0" />
+                <element signature="e#16229#16282#0" />
+                <element signature="e#16416#16474#0" />
+                <element signature="e#16635#17492#0" />
+                <element signature="e#17002#17363#0" />
+                <element signature="e#17130#17363#0" />
+                <element signature="e#17517#18074#0" />
+                <element signature="e#17561#18043#0" />
+                <element signature="e#17696#17717#0" />
+                <element signature="e#18093#18359#0" />
+                <element signature="e#18249#18313#0" />
+                <marker date="1576100979939" expanded="false" signature="30113:30114" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>imshow</find>
+      <find>print(</find>
+      <find>cv.line</find>
+      <find>cv.lin</find>
+      <find>print</find>
+      <find>check</find>
+      <find>canny_check</find>
+      <find>line</find>
+      <find>final</find>
+      <find>poplist</find>
+      <find>playfield</find>
+      <find>ratio</find>
+      <find>intersect</find>
+      <find>self.tablelines</find>
+    </findStrings>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/Main_12.10.2019.12:00.py.py" />
+        <option value="$PROJECT_DIR$/process_steps" />
+        <option value="$PROJECT_DIR$/Main_maybe_savable.py" />
+        <option value="$PROJECT_DIR$/Main.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="839" />
+    <option name="y" value="-1417" />
+    <option name="width" value="2560" />
+    <option name="height" value="1417" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="PoolPredictor" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PoolPredictor" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="PoolPredictor" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PoolPredictor" type="462c0819:PsiDirectoryNode" />
+              <item name="depr" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/depr" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/depr" />
+      <recent name="$PROJECT_DIR$/debug_images/old" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.Main">
+    <configuration name="Main" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PoolPredictor" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Main_maybe_savable" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="PoolPredictor" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/depr/Main_maybe_savable.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.Main" />
+        <item itemvalue="Python.Main_maybe_savable" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="" />
+      <created>1575758162621</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1575758162621</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="839" y="-1417" width="2560" height="1417" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10246227" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" weight="0.119791664" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32920355" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3464151" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39911506" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.32920355" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="R Graphics" order="3" />
+      <window_info anchor="right" id="R Packages" order="4" />
+    </layout>
+    <layout-to-restore>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1373802" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" weight="0.119791664" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32920355" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.4061947" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39911506" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.32920355" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="R Graphics" order="3" />
+      <window_info anchor="right" id="R Packages" order="4" />
+    </layout-to-restore>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/debug_images/lineimg60.png" />
+    <entry file="file://$PROJECT_DIR$/debug_images/lineimg.png" />
+    <entry file="file://$PROJECT_DIR$/debug_images/lineimg60.2.png" />
+    <entry file="file://$PROJECT_DIR$/debug_images/lineimg60.1.png" />
+    <entry file="file://$PROJECT_DIR$/depr/Main_12.9.2019.16:30.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/outline_check.png" />
+    <entry file="file://$PROJECT_DIR$/canny_check_lines.png" />
+    <entry file="file://$PROJECT_DIR$/test2.png" />
+    <entry file="file://$PROJECT_DIR$/debug_images/old/leftlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/horizontal_split.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/vertical_split.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/canny_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/canny_check_lines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/horizontal_vertical_sort.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/1_canny_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/2_canny_check_lines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/3_1st_pass_clean.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/4_horizontal_split.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/4_vertical_split.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/5_bottomlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/5_leftlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/6_bottomlines_avg.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/6_toplines_avg.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/6_leftlines_avg.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/5_rightlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/5_toplines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/6_rightlines_avg.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/toplines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/rightlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/lineimg1.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/grouped.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/bottomlines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/3_1st_pass_clean.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/2_canny_check_lines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/7_grouped.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/depr/Main_12.9.2019.21.00.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/1_canny_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/8_final_lines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/8_border_table.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/8_border_pockets.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/9_final_lines.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/9_table_point_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/9_pocket_point_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/depr/Main_12.10.2019.12:00.py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="227" column="29" selection-start-line="227" selection-start-column="29" selection-end-line="227" selection-end-column="29" />
+          <folding>
+            <element signature="e#339#833#0" />
+            <element signature="e#875#6910#0" />
+            <element signature="e#927#981#0" />
+            <element signature="e#1180#2503#0" />
+            <element signature="e#1312#1443#0" />
+            <element signature="e#1496#1738#0" />
+            <element signature="e#1791#2042#0" />
+            <element signature="e#2077#2144#0" />
+            <element signature="e#2399#2480#0" />
+            <element signature="e#2751#3119#0" />
+            <element signature="e#2942#3019#0" />
+            <element signature="e#3374#3462#0" />
+            <element signature="e#3720#4009#0" />
+            <element signature="e#4106#4392#0" />
+            <element signature="e#4701#4752#0" />
+            <element signature="e#7004#8939#0" />
+            <element signature="e#7262#7815#0" />
+            <element signature="e#7310#7815#0" />
+            <element signature="e#7389#7557#0" />
+            <element signature="e#7600#7815#0" />
+            <element signature="e#7643#7815#0" />
+            <element signature="e#7883#8918#0" />
+            <element signature="e#7922#8521#0" />
+            <element signature="e#8001#8169#0" />
+            <element signature="e#8212#8521#0" />
+            <element signature="e#8255#8521#0" />
+            <element signature="e#8341#8521#0" />
+            <element signature="e#8534#8577#0" />
+            <element signature="e#9934#9964#0" />
+            <element signature="e#11037#11650#0" />
+            <element signature="e#11223#11615#0" />
+            <element signature="e#11283#11398#0" />
+            <element signature="e#11443#11506#0" />
+            <element signature="e#11714#12242#0" />
+            <element signature="e#11808#12206#0" />
+            <element signature="e#12313#13030#0" />
+            <element signature="e#12408#13007#0" />
+            <element signature="e#12519#12936#0" />
+            <element signature="e#12555#12719#0" />
+            <element signature="e#12658#12719#0" />
+            <element signature="e#12772#12936#0" />
+            <element signature="e#12875#12936#0" />
+            <element signature="e#13081#13378#0" />
+            <element signature="e#13426#14722#0" />
+            <element signature="e#14253#14579#0" />
+            <element signature="e#14350#14579#0" />
+            <element signature="e#14757#17231#0" />
+            <element signature="e#17297#17799#0" />
+            <element signature="e#17868#18540#0" />
+            <element signature="e#18248#18280#0" />
+            <element signature="e#18626#19058#0" />
+            <element signature="e#18716#19036#0" />
+            <element signature="e#18786#18870#0" />
+            <element signature="e#18917#19001#0" />
+            <element signature="e#19101#19102#0" />
+            <element signature="e#19310#19422#0" />
+            <element signature="e#19470#19626#0" />
+            <element signature="e#19667#19753#0" />
+            <element signature="e#19819#20168#0" />
+            <element signature="e#20209#20722#0" />
+            <element signature="e#20352#20722#0" />
+            <element signature="e#20352#20405#0" />
+            <element signature="e#20539#20597#0" />
+            <element signature="e#20752#21609#0" />
+            <element signature="e#21119#21480#0" />
+            <element signature="e#21247#21480#0" />
+            <element signature="e#21634#22191#0" />
+            <element signature="e#21678#22160#0" />
+            <element signature="e#21813#21834#0" />
+            <element signature="e#22210#22476#0" />
+            <element signature="e#22366#22430#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/10_ball_area_crop.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/process_steps">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="2" selection-start-column="2" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/depr/Main_maybe_savable.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="415">
+          <caret line="320" column="25" selection-end-line="676" />
+          <folding>
+            <element signature="e#343#841#0" />
+            <element signature="e#935#989#0" />
+            <element signature="e#1188#2511#0" />
+            <element signature="e#1320#1451#0" />
+            <element signature="e#1504#1746#0" />
+            <element signature="e#1799#2050#0" />
+            <element signature="e#2085#2152#0" />
+            <element signature="e#2407#2488#0" />
+            <element signature="e#2759#3057#0" />
+            <element signature="e#3555#3844#0" />
+            <element signature="e#3941#4227#0" />
+            <element signature="e#4682#4734#0" />
+            <element signature="e#6884#8819#0" />
+            <element signature="e#7142#7695#0" />
+            <element signature="e#7190#7695#0" />
+            <element signature="e#7269#7437#0" />
+            <element signature="e#7480#7695#0" />
+            <element signature="e#7523#7695#0" />
+            <element signature="e#7763#8798#0" />
+            <element signature="e#7802#8401#0" />
+            <element signature="e#7881#8049#0" />
+            <element signature="e#8092#8401#0" />
+            <element signature="e#8135#8401#0" />
+            <element signature="e#8221#8401#0" />
+            <element signature="e#8414#8457#0" />
+            <element signature="e#8868#10897#0" />
+            <element signature="e#9854#9884#0" />
+            <element signature="e#10955#11205#0" />
+            <element signature="e#11072#11160#0" />
+            <element signature="e#11265#11878#0" />
+            <element signature="e#11451#11843#0" />
+            <element signature="e#11511#11626#0" />
+            <element signature="e#11671#11734#0" />
+            <element signature="e#11942#12470#0" />
+            <element signature="e#12036#12434#0" />
+            <element signature="e#13382#13383#0" />
+            <element signature="e#14768#14795#0" />
+            <element signature="e#16072#17368#0" />
+            <element signature="e#16899#17225#0" />
+            <element signature="e#16996#17225#0" />
+            <element signature="e#17403#19877#0" />
+            <element signature="e#19943#20445#0" />
+            <element signature="e#20514#21186#0" />
+            <element signature="e#20894#20926#0" />
+            <element signature="e#21261#21693#0" />
+            <element signature="e#21351#21671#0" />
+            <element signature="e#21421#21505#0" />
+            <element signature="e#21552#21636#0" />
+            <element signature="e#21771#21939#0" />
+            <element signature="e#21835#21917#0" />
+            <element signature="e#21982#21983#0" />
+            <element signature="e#22191#22303#0" />
+            <element signature="e#22351#22507#0" />
+            <element signature="e#22548#22634#0" />
+            <element signature="e#22700#23049#0" />
+            <element signature="e#23090#23603#0" />
+            <element signature="e#23233#23603#0" />
+            <element signature="e#23233#23286#0" />
+            <element signature="e#23420#23478#0" />
+            <element signature="e#23633#24490#0" />
+            <element signature="e#24000#24361#0" />
+            <element signature="e#24128#24361#0" />
+            <element signature="e#24515#25072#0" />
+            <element signature="e#24559#25041#0" />
+            <element signature="e#24694#24715#0" />
+            <element signature="e#25091#25361#0" />
+            <element signature="e#25251#25315#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/8_border_playfield.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/9_playfield_point_check.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/depr/Main_12.10.2019.14:30.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="373">
+          <caret line="612" column="40" lean-forward="true" selection-start-line="612" selection-start-column="40" selection-end-line="612" selection-end-column="40" />
+          <folding>
+            <element signature="e#883#6717#0" />
+            <element signature="e#5222#5274#0" />
+            <element signature="e#7613#9277#0" />
+            <element signature="e#8502#8526#0" />
+            <element signature="e#8795#10824#0" />
+            <element signature="e#9781#9811#0" />
+            <element signature="e#11574#12328#0" />
+            <element signature="e#11536#15883#0" />
+            <element signature="e#11578#13526#0" />
+            <element signature="e#11754#11882#0" />
+            <element signature="e#11942#12076#0" />
+            <element signature="e#12134#12264#0" />
+            <element signature="e#12323#12455#0" />
+            <element signature="e#14296#14319#0" />
+            <element signature="e#15789#15833#0" />
+            <element signature="e#11192#11805#0" />
+            <element signature="e#11869#12397#0" />
+            <element signature="e#12503#15375#0" />
+            <element signature="e#13710#13974#0" />
+            <element signature="e#13482#14830#0" />
+            <element signature="e#14507#14833#0" />
+            <element signature="e#14604#14833#0" />
+            <element signature="e#22071#23376#0" />
+            <element signature="e#24770#25273#0" />
+            <element signature="e#15880#15912#0" />
+            <element signature="e#18996#19428#0" />
+            <element signature="e#19659#19827#0" />
+            <element signature="e#14978#14979#0" />
+            <element signature="e#15187#15299#0" />
+            <element signature="e#15347#15503#0" />
+            <element signature="e#15544#15630#0" />
+            <element signature="e#15696#16045#0" />
+            <element signature="e#16086#16612#0" />
+            <element signature="e#16229#16612#0" />
+            <element signature="e#16229#16282#0" />
+            <element signature="e#16416#16474#0" />
+            <element signature="e#16635#17492#0" />
+            <element signature="e#17002#17363#0" />
+            <element signature="e#17130#17363#0" />
+            <element signature="e#17517#18074#0" />
+            <element signature="e#17561#18043#0" />
+            <element signature="e#17696#17717#0" />
+            <element signature="e#18093#18359#0" />
+            <element signature="e#18249#18313#0" />
+            <marker date="1576100979939" expanded="false" signature="30113:30114" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
