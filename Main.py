@@ -20,6 +20,7 @@ setting = 2
 
 class Table:
     def __init__(self, setting_num=0):
+        global shape
         self.edges = {}
         self.frame = None
         self.linelist = None
@@ -33,10 +34,9 @@ class Table:
         self.setting = setting_num
 
         self.find_table_lines()
-        self.group_lines_by_category()
         self.find_all_intersections()
-        self.check_all_intersections()
-        self.set_boxes()
+        self.goodpoints = self.check_all_intersections()
+        self.set_boxes(self.goodpoints)
         check = self.drawlines(color=(0, 200, 255))
         cv.imwrite('./debug_images/10_final_lines.png', check)
         print('Table Initialized!')
@@ -45,7 +45,7 @@ class Table:
         global shape
         if cap.isOpened():
             ret, frame = cap.read()
-            self.frame = frame
+            self.frame = frame.copy()
         count = 0
         n_frames = 10
         self.linelist = []
@@ -167,40 +167,6 @@ class Table:
             cv.imwrite('./debug_images/6_averaged_' + key + 'lines.png', checkimg)
             self.linelist[key] = averaged
 
-        # toplines = self.group_lines_by_proximity(toplines)
-        # bottomlines = self.group_lines_by_proximity(bottomlines)
-        # leftlines = self.group_lines_by_proximity(leftlines)
-        # rightlines = self.group_lines_by_proximity(rightlines)
-        #
-        # top = self.drawlines(frame.copy(), linelist=toplines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/5_toplines.png', top)
-        # bottom = self.drawlines(frame.copy(), linelist=bottomlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/5_bottomlines.png', bottom)
-        # left = self.drawlines(frame.copy(), linelist=leftlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/5_leftlines.png', left)
-        # right = self.drawlines(frame.copy(), linelist=rightlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/5_rightlines.png', right)
-        #
-        # toplines = self.find_average_lines_from_groups(toplines, axis='y')
-        # bottomlines = self.find_average_lines_from_groups(bottomlines, axis='y')
-        # leftlines = self.find_average_lines_from_groups(leftlines, axis='x')
-        # rightlines = self.find_average_lines_from_groups(rightlines, axis='x')
-        #
-        # top = self.drawlines(frame.copy(), linelist=toplines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/6_toplines_avg.png', top)
-        # bottom = self.drawlines(frame.copy(), linelist=bottomlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/6_bottomlines_avg.png', bottom)
-        # left = self.drawlines(frame.copy(), linelist=leftlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/6_leftlines_avg.png', left)
-        # right = self.drawlines(frame.copy(), linelist=rightlines, color=(0, 0, 255))
-        # cv.imwrite('./debug_images/6_rightlines_avg.png', right)
-        #
-        # # self.linelist = [toplines, rightlines, bottomlines, leftlines]
-        # self.linelist = {'top': toplines, 'bottom': bottomlines, 'left': leftlines, 'right': rightlines}
-
-        # for key in self.linelist:
-        #     print(key)
-
         copy2 = self.drawlines(frame.copy(), color=(0, 0, 255))
         cv.imwrite('./debug_images/7_grouped.png', copy2)
 
@@ -231,70 +197,20 @@ class Table:
 
         if isinstance(linelist, (list, np.ndarray)):
             draw(linelist)
-            # for lines in linelist:
-            #     if isinstance(lines[0], (int, float, np.int32, np.int64)):
-            #         x1, y1, x2, y2 = lines[0], lines[1], lines[2], lines[3]
-            #         pt1, pt2 = (x1, y1), (x2, y2)
-            #         cv.line(frame, pt1, pt2, color, thickness)
-            #     else:
-            #         for line in lines:
-            #             if isinstance(line[0], (int, float, np.int32, np.int64)):
-            #                 x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-            #                 pt1, pt2 = (x1, y1), (x2, y2)
-            #                 cv.line(frame, pt1, pt2, color, thickness)
         elif isinstance(linelist, dict):
             for key in linelist:
                 lines = linelist[key]
                 draw([lines])
         return frame
 
-    def group_lines_by_category(self):
-
-        lines = self.linelist
-        lines = {key: np.asarray(value) for (key, value) in lines.items()}
-
-        self.check_line_ratios(lines)       # TODO: CHECK LINE RATIOS
-
-
-        # copy = self.frame.copy()
-        # cv.circle(copy, test, 10, (0, 255, 255), 10)
-        # cv.imwrite('./debug_images/99_coords_test.png', copy)
-
-        top, bottom = lines['top'], lines['bottom']
-        left, right = lines['left'], lines['right']
-
-        playfield_t, pockets_t, table_t = self.max_mid_min(top, axis='y')
-        table_b, pockets_b, playfield_b = self.max_mid_min(bottom, axis='y')
-        table_r, pockets_r, playfield_r = self.max_mid_min(right, axis='x')
-        playfield_l, pockets_l, table_l = self.max_mid_min(left, axis='x')
-
-        table_lines = {'top': table_t, 'bottom': table_b, 'left': table_l, 'right': table_r}
-        playfield_lines = {'top': playfield_t, 'bottom': playfield_b, 'left': playfield_l, 'right': playfield_r}
-        pocket_lines = {'top': pockets_t, 'bottom': pockets_b, 'left': pockets_l, 'right': pockets_r}
-        self.tablelines = table_lines
-        self.playfieldlines = playfield_lines
-        self.pocketlines = pocket_lines
-
-        # for line in playfield_lines:
-        #     x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-        #     cv.line(self.frame, (x1, y1), (x2, y2), (0, 0, 255), 5)
-        #
-        # for line in table_lines:
-        #     x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-        #     cv.line(self.frame, (x1, y1), (x2, y2), (255, 0, 0), 5)
-        #
-        # for line in pocket_lines:
-        #     x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-        #     cv.line(self.frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
-
-        playfield = self.drawlines(self.frame.copy(), playfield_lines, (0, 0, 255), 5)
-        cv.imwrite('./debug_images/8_border_playfield.png', playfield)
-
-        table_ = self.drawlines(self.frame.copy(), table_lines, (255, 0, 0), 5)
-        cv.imwrite('./debug_images/8_border_table.png', table_)
-
-        pockets = self.drawlines(self.frame.copy(), pocket_lines, (0, 255, 0), 5)
-        cv.imwrite('./debug_images/8_border_pockets.png', pockets)
+    def drawboxes(self, frame=None, boxes=None):
+        if frame is None:
+            frame = self.frame.copy()
+        if boxes is None:
+            boxes = [self.playbox, self.pocketbox, self.tablebox]
+        for box in boxes:
+            pt1, pt2 = box[0], box[1]
+            cv.rectangle(frame, pt1, pt2, (255, 255, 255), 2)
 
     def recenter_coordinates(self, coords=(0, 0)):
         frame = self.frame.copy()
@@ -318,7 +234,6 @@ class Table:
         print('Checking line distances by part of table...')
 
         def get_relative_distances():
-            print('\n')
             distances = {'full': [], 'wood': [], 'bump': []}
             for key_ in goodkeys:
                 if key_ == 'top':
@@ -364,39 +279,19 @@ class Table:
 
         def check_against_avgs(checklines, xory, avg_dict, thresh=10):
             checklines = [list(i) for i in checklines]
-            dist_list = [val [0] for val in avg_dict.values()]
+            dist_list = [val[0] for val in avg_dict.values()]
             keeplines = []
-            # keeplines.append(checklines[0])
-            # print(len(checklines), 'lines to check distance on.')
             for i in range(len(checklines)):
                 line = checklines[i]
-                # print(type(line))
-                # inlist = False
                 for j in range(i + 1, len(checklines)):                      # TODO: KEEP AND EYE OUT HERE FOR ISSUES
                     vs_line = checklines[j]
                     dist = abs(line[xory] - vs_line[xory])
                     for i in range(dist - thresh, dist + thresh):
                         if int(i) in dist_list:
-                            # print('YUP!')
                             if line not in keeplines:
                                 keeplines.append(line)
                             if vs_line not in keeplines:
                                 keeplines.append(vs_line)
-                    # for val in dist_list:
-                    #     diff = abs(dist - val)
-                    #     print(diff)
-                    #     if diff < thresh and line not in keeplines:
-                    #         keeplines.append(line)
-            # print('keeping', len(keeplines), 'lines.')
-            # for i in keeplines:
-            #     pass
-                # print(i)
-
-            # copy = self.drawlines(self.frame.copy(), keeplines, (255, 255, 255), 2)
-            # cv.imwrite('./debug_images/11_line_dist_check.png', copy)
-
-        # def check_ratios():
-
 
         if linedict is None:
             linedict = self.linelist
@@ -408,8 +303,6 @@ class Table:
                 goodkeys.append(key)
             else:
                 badkeys.append(key)
-        goodlines = [linedict[key] for key in goodkeys]
-        # check_ratios(goodlines)
 
         for key in badkeys:
             group = linedict[key]
@@ -424,34 +317,12 @@ class Table:
                 average_dists = get_relative_distances()
                 check_against_avgs(group, axis, average_dists)
 
-    def find_contours_from_lines(self, linelist):
-        print('\n')
-        axis = self.check_axis(linelist[0])
-        # print('len:', len(linelist))
-        # print('axis:', axis)
-        outlist = []
-        for group in linelist:
-            xy_list = []
-            for line in group:
-                xy_list.append([line[0], line[1]])
-                xy_list.append([line[2], line[3]])
-                # print(line)
-            if axis == 'y':
-                # Sort by x
-                outlist.append(np.sort(xy_list, 0))
-            elif axis == 'x':
-                outlist.append(np.sort(xy_list, 1))
-            print(xy_list)
-        return np.asarray(outlist)
-
     def group_lines_by_direction(self, minlinelen=0):
         vertical = []
         horizontal = []
         for i in range(len(self.linelist)):
             line = self.linelist[i]
             x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-            pt1, pt2 = (x1, y1), (x2, y2)
-            # cv.line(frame, pt1, pt2, (255, 0, 0), 2)
             if x1 == x2 and abs(y1 - y2) > minlinelen:
                 vertical.append(self.linelist[i])
             elif y1 == y2 and abs(x1 - x2) > minlinelen:
@@ -476,56 +347,21 @@ class Table:
             if grouped is False:
                 groups.append([line_])
 
-
         groups = []
         axis = self.check_axis(linelist)
         if linelist is None:
             linelist = self.linelist
-            #
-            # toplines = self.group_lines_by_proximity(toplines)
-            # bottomlines = self.group_lines_by_proximity(bottomlines)
-            # leftlines = self.group_lines_by_proximity(leftlines)
-            # rightlines = self.group_lines_by_proximity(rightlines)
-            #
-            # top = self.drawlines(frame.copy(), linelist=toplines, color=(0, 0, 255))
-            # cv.imwrite('./debug_images/5_toplines.png', top)
-            # bottom = self.drawlines(frame.copy(), linelist=bottomlines, color=(0, 0, 255))
-            # cv.imwrite('./debug_images/5_bottomlines.png', bottom)
-            # left = self.drawlines(frame.copy(), linelist=leftlines, color=(0, 0, 255))
-            # cv.imwrite('./debug_images/5_leftlines.png', left)
-            # right = self.drawlines(frame.copy(), linelist=rightlines, color=(0, 0, 255))
-            # cv.imwrite('./debug_images/5_rightlines.png', right)
         if isinstance(linelist, dict):
             for key in linelist:
                 list_ = linelist[key]
         elif isinstance(linelist, (list, np.ndarray)):
             for line in linelist:
                 group(line)
-                # x1, y1 = line[0], line[1]
-                # grouped = False
-                # for i in range(len(groups)):
-                #     if axis == 'y':
-                #         sample_y = groups[i][0][1]
-                #         if abs(y1 - sample_y) < thresh:
-                #             groups[i].append(line)
-                #             grouped = True
-                #     if axis == 'x':
-                #         sample_x = groups[i][0][0]
-                #         if abs(x1 - sample_x) < thresh:
-                #             groups[i].append(line)
-                #             grouped = True
-                # if grouped is False:
-                #     groups.append([line])
-
-
-
         poplist = []
         for i in range(len(groups)):
             if len(groups[i]) < group_num_thresh:
                 poplist.append(i)
-
         self.remove_list_of_indexes(groups, poplist)
-
         return groups
 
     def check_axis(self, linelist=None):
@@ -540,9 +376,9 @@ class Table:
             axis = 'y'
         return axis
 
-    def find_balls(self, frame=None):
+    def find_balls(self, frame=None, draw=True):
         if frame is None:
-            frame = self.frame
+            frame = self.frame.copy()
         copy = frame.copy()
         cropbox = self.pocketbox
         top, bottom = cropbox[0][1], cropbox[1][1]
@@ -566,38 +402,76 @@ class Table:
                 x, y = circle[0], circle[1]
                 radius = circle[2]
                 radiuslist.append(radius)
-                cv.circle(frame, (x, y), radius, (0, 255, 0), 2)
-                cv.circle(frame, (x, y), 2, (0, 0, 255), 3)
+                if draw:
+                    cv.circle(frame, (x, y), radius, (0, 255, 0), 2)
+                    cv.circle(frame, (x, y), 2, (0, 0, 255), 3)
         circle_img = frame
         # print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)))
         return circle_img
 
-    def set_boxes(self):
-        print('Set bounding-boxes for parts of table...')
-        tablelines = self.tablelines
-        pocketlines = self.pocketlines
-        playlines = self.playfieldlines
+    def set_boxes(self, goodpoints):
+        playfield_points = goodpoints[0]
+        pocket_points = goodpoints[1]
+        table_points = goodpoints[2]
+        for pt in playfield_points:
+            quad = self.check_quadrant(pt)
+            if quad == 'ul':
+                ul = pt
+            elif quad == 'br':
+                br = pt
+        self.playbox = [ul, br]
+        copy = self.frame.copy()
+        cv.rectangle(copy, self.playbox[0], self.playbox[1], (0, 200, 255), 2)
+        cv.imwrite('./debug_images/8_playbox_check.png', copy)
 
-        groups = {'table': tablelines, 'pocket': pocketlines, 'play': playlines}
-        points = {'table': None, 'pocket': None, 'play': None}
+        for pt in pocket_points:
+            quad = self.check_quadrant(pt)
+            if quad == 'ul':
+                ul = pt
+            elif quad == 'br':
+                br = pt
+        self.pocketbox = [ul, br]
+        copy = self.frame.copy()
+        cv.rectangle(copy, self.pocketbox[0], self.pocketbox[1], (0, 200, 255), 2)
+        cv.imwrite('./debug_images/8_pocketbox_check.png', copy)
 
-        for key in groups:
-            top_l = self.find_line_intersection(groups[key]['top'], groups[key]['left'])
-            top_r = self.find_line_intersection(groups[key]['top'], groups[key]['right'])
-            bot_l = self.find_line_intersection(groups[key]['bottom'], groups[key]['left'])
-            bot_r = self.find_line_intersection(groups[key]['bottom'], groups[key]['right'])
-            copy = self.frame.copy()
-            cv.circle(copy, top_l, 5, (0, 0, 255), 4)
-            cv.circle(copy, top_r, 5, (0, 0, 255), 4)
-            cv.circle(copy, bot_l, 5, (0, 0, 255), 4)
-            cv.circle(copy, bot_r, 5, (0, 0, 255), 4)
-            cv.rectangle(copy, top_l, bot_r, (0, 255, 0), 2)
-            cv.imwrite('./debug_images/9_'+ key + '_box_check.png', copy)
-            points[key] = {'tl': top_l, 'br': bot_r, 'bl': bot_l, 'tr': top_r}
+        for pt in table_points:
+            quad = self.check_quadrant(pt)
+            if quad == 'ul':
+                ul = pt
+            elif quad == 'br':
+                br = pt
+        self.tablebox = [ul, br]
+        copy = self.frame.copy()
+        cv.rectangle(copy, self.tablebox[0], self.tablebox[1], (0, 200, 255), 2)
+        cv.imwrite('./debug_images/8_tablebox_check.png', copy)
 
-        self.tablebox = (points['table']['tl'], points['table']['br'])
-        self.pocketbox = (points['pocket']['tl'], points['pocket']['br'])
-        self.playbox = (points['play']['tl'], points['play']['br'])
+    # def set_boxes(self):
+    #     print('Set bounding-boxes for parts of table...')
+    #     tablelines = self.tablelines
+    #     pocketlines = self.pocketlines
+    #     playlines = self.playfieldlines
+    #
+    #     groups = {'table': tablelines, 'pocket': pocketlines, 'play': playlines}
+    #     points = {'table': None, 'pocket': None, 'play': None}
+    #
+    #     for key in groups:
+    #         top_l = self.find_line_intersection(groups[key]['top'], groups[key]['left'])
+    #         top_r = self.find_line_intersection(groups[key]['top'], groups[key]['right'])
+    #         bot_l = self.find_line_intersection(groups[key]['bottom'], groups[key]['left'])
+    #         bot_r = self.find_line_intersection(groups[key]['bottom'], groups[key]['right'])
+    #         copy = self.frame.copy()
+    #         cv.circle(copy, top_l, 5, (0, 0, 255), 4)
+    #         cv.circle(copy, top_r, 5, (0, 0, 255), 4)
+    #         cv.circle(copy, bot_l, 5, (0, 0, 255), 4)
+    #         cv.circle(copy, bot_r, 5, (0, 0, 255), 4)
+    #         cv.rectangle(copy, top_l, bot_r, (0, 255, 0), 2)
+    #         cv.imwrite('./debug_images/9_'+ key + '_box_check.png', copy)
+    #         points[key] = {'tl': top_l, 'br': bot_r, 'bl': bot_l, 'tr': top_r}
+    #
+    #     self.tablebox = (points['table']['tl'], points['table']['br'])
+    #     self.pocketbox = (points['pocket']['tl'], points['pocket']['br'])
+    #     self.playbox = (points['play']['tl'], points['play']['br'])
 
     def find_all_intersections(self, lines=None):
         print('Finding all intersections...')
@@ -623,21 +497,11 @@ class Table:
                     intersection = self.find_line_intersection(line, line2)
                     if intersection not in self.intersections and intersection is not None:
                         self.intersections.append(intersection)
-        # print(self.intersections)
-        # print(len(self.intersections), 'intersections found.')
 
     def check_all_intersections(self):
 
         midx = self.frame.shape[1] // 2
         midy = self.frame.shape[0] // 2
-
-        # def get_center_offset(lst):
-        #     array = np.asarray(lst)
-        #     avgx = np.mean(array[: ,0])
-        #     avgy = np.mean(array[:, 1])
-        #     x_offset = int(avgx - midx)
-        #     y_offset = int(avgy - midy)
-        #     return x_offset, y_offset
 
         def get_dists_from_center(points):
 
@@ -646,13 +510,6 @@ class Table:
             coords_w_dists = []
             all_x_dists = []
             all_y_dists = []
-            # x_offset, y_offset = get_center_offset(points)
-            # relative_center = (0 + x_offset, 0 + y_offset)
-            # relative_center = (midx + x_offset, midy + y_offset)
-            # copy = self.frame.copy()
-            # cv.circle(copy, relative_center, 5, (255, 255, 255), 5)
-            # cv.circle(copy, relative_center, 500, (255, 255, 255), 5)
-            # cv.imwrite('./debug_images/13_relative_center.png', copy)
             for i in range(len(shifted)):
                 coord = shifted[i]
 
@@ -664,26 +521,6 @@ class Table:
                 coords_w_dists.append(coord_dist)
             coords_w_dists.sort(key=lambda x: x[0])
             coords_w_dists.sort(key=lambda x: x[1])
-            # for i in coords_w_dists:
-            #     print(i)
-            xoffset = sum(all_x_dists) // len(all_x_dists)
-            yoffset = sum(all_y_dists) // len(all_y_dists)
-
-            #
-            # for i in range(len(shifted)):
-            #     coord = shifted[i]
-            #     x, y = coord[0], coord[1]
-            #     xdist = abs(0 - abs(x))
-            #     ydist = abs(0 - abs(y))
-            #     all_x_dists.append(xdist)
-            #     all_y_dists.append(ydist)
-            #     centerdist = sqrt((xdist ** 2) + (ydist ** 2))
-            #     coord = (coord[0] + midx, coord[1] + midy)
-            #     coord_dist = (coord, centerdist)
-            #     coords_w_dists.append(coord_dist)
-            # coords_w_dists.sort(key=lambda x: x[1])
-            # for i in coords_w_dists:
-            #     print(i)
 
             return coords_w_dists
 
@@ -698,7 +535,6 @@ class Table:
                 out += 'l'
             elif x > midx:
                 out += 'r'
-            # print(out)
             return out
 
         def find_good_points(p_w_d):
@@ -707,7 +543,7 @@ class Table:
             quadrants = {'ul': [], 'ur': [], 'br': [], 'bl': []}
             for ptdist in p_w_d:
                 point = ptdist[0]
-                key = check_quadrant(point)
+                key = self.check_quadrant(point)
                 quadrants[key].append(ptdist)
             # keylist = []
             for key in quadrants:
@@ -715,12 +551,11 @@ class Table:
                 quadrants[key] = [i[0] for i in quadrants[key]]
                 # keylist.append(key)
             grouplist = []
+            goodpoints = {0: [], 1: [], 2: []}
             for i in range(3):                                               # For each or the 3 parts
-                print('round', i)
                 group = []                                                      # Create a new group of points
                 copy = self.frame.copy()
                 for key in quadrants:                                           # For each group in quadrants
-                    print(quadrants)
                     pt = quadrants[key][0]
 
                     group.append(pt)                                                # add the smallest of the quadrant to group
@@ -728,7 +563,7 @@ class Table:
                     del quadrants[key][0]                                           # delete the value that you just added from the quadrant
 
                 grouplist.append(group)                                         # add the group you just made to the list of groups
-
+                goodpoints[i] = group
                 for key in quadrants:                                           # For each group in quadrants:
                     quadrant = quadrants[key]
                     killlist = []
@@ -738,60 +573,10 @@ class Table:
                             for gpoint in group:                                            # For each known good point in that group
                                 if ind not in killlist and isinline(gpoint, point):                                     # if the point in the current quadrant at the current index is inline with the good point
                                     killlist.append(ind)                                            # Add that index to the killlist
-                    print('kill:', killlist)
                     quadrants[key] = self.remove_list_of_indexes(quadrants[key], killlist)   # remove all indexes in the killlist from the quadrant
 
-
                 cv.imwrite('./debug_images/14_quadrant_minimum_point_check' + str(i) + '.png', copy)
-
-            # for i in range(len(p_w_d)):
-            #     if i + 4 <= len(p_w_d):                                    # TODO: Maybe sort points into quadrant lists
-            #         quadrants = {'ul': [], 'ur': [], 'br': [], 'bl': []}   # TODO 1. Get 2 intersection points at a time and check their quadrants
-            #         pt1, pt2 = pnts[i], pnts[i + 1]                                # TODO 2. Then get their distance from eachother
-            #         dist1_2 = self.get_dist(pt1, pt2)                         # TODO 3. Then iterate through the rest of the points until you find a point in one of the other 2 quadrants
-            #                                                                        # TODO 4. Check that the new point has a dist ratio with the initial points of close to 2:1
-            #         pts = [pt1, pt2]
-            #         for pt in pts:
-            #             key = check_quadrant(pt)
-            #             # if quadrants[key] is None:
-            #                 # quadrants[key] = pt
-            #             quadrants[key].append(pt)
-            #             # else:
-            #             #     print('quadrant not empty in check_ratios within check_all_intersections')
-            #             #     print(quadrants)
-            #         print(quadrants)
-            #         for j in range(i + 1, len(pnts)):
-            #             pt3 = pts[j]
-            #             key = check_quadrant(pt3)
-            #             if quadrants[key] is None:
-            #                 dist1_3 = self.get_dist(pt3, pt1)
-            #                 dist2_3 = self.get_dist(pt3, pt2)
-            #                 dists = [dist1_2, dist1_3, dist2_3]
-            #                 # short = min(dists)
-            #                 # dists.remove(short)
-            #                 # mid = min(dists)
-            #                 # long = max(dists)
-            #                 for ind in range(len(dists)):
-            #                     ind2 = (ind + 1) % len(dists)
-            #                     twodists = [dists[ind], dists[ind2]]
-            #                     small = min(twodists)
-            #                     big = max(twodists)
-            #                     ratio = big / small
-            #                     if abs(2 - ratio) < thresh:
-            #                         print('ratio is good!!')
-            #
-            #
-
-                    # group = [pnts[i], pnts[i + 1], pnts[i + 2], pnts[i + 3]]
-                    # for pt in group:
-                    #     point = pt[0]
-                    #     dist = pt[1]
-                    #     key = check_quadrant(point)
-                    #     if quadrants[key] == '':
-                    #         quadrants[key] = point
-                    #     else:
-                    #         print('point at ' + str(point) )
-                    # print(group)
+            return goodpoints
 
         def check_ratio(dist1, dist2, thresh=0.2):
             dists = [dist1, dist2]
@@ -826,10 +611,10 @@ class Table:
             else:
                 return False
 
-
         intersections = self.intersections
         points_w_dists = get_dists_from_center(intersections)
-        find_good_points(points_w_dists)
+        good_points = find_good_points(points_w_dists)
+        return good_points
 
     @staticmethod
     def max_mid_min(group, axis='x'):
@@ -837,7 +622,6 @@ class Table:
             xory = 0
         elif axis == 'y':
             xory = 1
-        # print(len(group))
         group2 = list(group)
         maxind = group.argmax(axis=0)[xory]
         maximum = list(group2[maxind])
@@ -874,7 +658,6 @@ class Table:
     @staticmethod
     def find_average_lines_from_groups(groups, axis='x'):
         output = []
-        # group = np.asarray(groups)
         for group in groups:
             group = np.asarray(group)
             if axis == 'x':
@@ -911,22 +694,20 @@ class Table:
         else:
             return dist
 
-    # line_intersection((A, B), (C, D))
-
-#
-# class Pocket:
-#     def __init__(self):
-#         pass
-#
-#
-# class Ball:
-#     def __init__(self):
-#         pass
-#
-#
-# class Stick:
-#     def __init__(self):
-#         pass
+    def check_quadrant(self, point):
+        midx = self.frame.shape[1] // 2
+        midy = self.frame.shape[0] // 2
+        out = ''
+        x, y = point[0], point[1]
+        if y < midy:
+            out += 'u'
+        elif y > midy:
+            out += 'b'
+        if x < midx:
+            out += 'l'
+        elif x > midx:
+            out += 'r'
+        return out
 
 
 def recursive_len(item):
@@ -957,7 +738,6 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
     # apply automatic Canny edge detection using the computed median
     lower = int(max(0, (1.0 - sigma) * v) * lowermod)
     upper = int(min(255, (1.0 + sigma) * v) * uppermod)
-    # print(lower, upper)
     edged = cv.Canny(image, lower, upper)
     return edged
 
@@ -1006,7 +786,8 @@ def draw_circles(img):
 def play_frame():
     ret, frame = cap.read()
     if ret:
-        table.drawlines(frame)
+        # table.drawlines(frame)
+        table.drawboxes(frame)
         table.find_balls(frame)
         # frame = draw_circles(frame)
         cv.imshow('frame', frame)
