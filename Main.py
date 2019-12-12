@@ -3,6 +3,7 @@ import numpy as np
 import imutils
 import cython
 import time
+from math import sqrt
 
 cv2 = cv
 
@@ -30,12 +31,15 @@ class Table:
         self.tablebox = None
         self.intersections = []
         self.setting = setting_num
+
         self.find_table_lines()
         self.group_lines_by_category()
         self.find_all_intersections()
+        self.check_all_intersections()
         self.set_boxes()
         check = self.drawlines(color=(0, 200, 255))
         cv.imwrite('./debug_images/10_final_lines.png', check)
+        print('Table Initialized!')
 
     def find_table_lines(self):
         global shape
@@ -45,6 +49,8 @@ class Table:
         count = 0
         n_frames = 10
         self.linelist = []
+
+        print('Finding initial lines...')
 
         shape = frame.shape
 
@@ -96,6 +102,8 @@ class Table:
         print(len(self.linelist), 'lines found')
         poplist = []
 
+        print('Filtering lines by slope...')
+
         for i in range(len(self.linelist)):
             line = self.linelist[i]
             x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
@@ -109,10 +117,14 @@ class Table:
         clean1 = self.drawlines(self.frame.copy(), color=(0, 0, 255))
         cv.imwrite('./debug_images/3_slope_filter.png', clean1)
 
+        print('Sorting lines by direction...')
+
         horizontal, vertical = self.group_lines_by_direction(minlinelen=30)
 
         toplines, bottomlines = [], []
         leftlines, rightlines = [], []
+
+        print('Sorting lines by side...')
 
         # Split horizontal into top and bottom
         for i in range(len(horizontal)):
@@ -139,6 +151,7 @@ class Table:
         cv.imwrite('./debug_images/4_vertical_split.png', vert)
 
         self.linelist = {'top': toplines, 'bottom': bottomlines, 'left': leftlines, 'right': rightlines}
+        print('Grouping lines by proximity and replacing them with an averaged line...')
 
         for key in self.linelist:
             lines = self.linelist[key]
@@ -236,11 +249,13 @@ class Table:
         return frame
 
     def group_lines_by_category(self):
+
         lines = self.linelist
         lines = {key: np.asarray(value) for (key, value) in lines.items()}
 
         self.check_line_ratios(lines)       # TODO: CHECK LINE RATIOS
-        test = self.recenter_coordinates((0, 0))
+
+
         # copy = self.frame.copy()
         # cv.circle(copy, test, 10, (0, 255, 255), 10)
         # cv.imwrite('./debug_images/99_coords_test.png', copy)
@@ -299,6 +314,8 @@ class Table:
             return outcoordlist
 
     def check_line_ratios(self, linedict=None):
+
+        print('Checking line distances by part of table...')
 
         def get_relative_distances():
             print('\n')
@@ -442,7 +459,6 @@ class Table:
         return horizontal, vertical
 
     def group_lines_by_proximity(self, linelist=None, thresh=30, group_num_thresh=3):
-
         def group(line_):
             x1, y1 = line_[0], line_[1]
             grouped = False
@@ -557,6 +573,7 @@ class Table:
         return circle_img
 
     def set_boxes(self):
+        print('Set bounding-boxes for parts of table...')
         tablelines = self.tablelines
         pocketlines = self.pocketlines
         playlines = self.playfieldlines
@@ -583,15 +600,236 @@ class Table:
         self.playbox = (points['play']['tl'], points['play']['br'])
 
     def find_all_intersections(self, lines=None):
+        print('Finding all intersections...')
         if lines is None:
             lines = self.linelist
         if isinstance(lines, dict):
             lines = list(lines.values())
-        print(lines)
-        lstshape = np.asarray(lines).shape
-        if isinstance(lines, )
+        all_lines = []
+        if isinstance(lines[0], list) and not isinstance(lines[0][0], (int, float, np.int32, np.int64)):
+            for linelist in lines:
+                if isinstance(linelist[0], list) and isinstance(linelist[0][0], (int, float, np.int32, np.int64)):
+                    for lst in lines:
+                        for line in lst:
+                            all_lines.append(line)
+                else:
+                    print('Wrong type in Table.find_all_intersections')
+        else:
+            print('Wrong type in Table.find_all_intersections')
+        for line in all_lines:
+            for i in range(len(all_lines)):
+                line2 = all_lines[i]
+                if line != line2 and line is not None and line2 is not None:
+                    intersection = self.find_line_intersection(line, line2)
+                    if intersection not in self.intersections and intersection is not None:
+                        self.intersections.append(intersection)
+        # print(self.intersections)
+        # print(len(self.intersections), 'intersections found.')
+
+    def check_all_intersections(self):
+
+        midx = self.frame.shape[1] // 2
+        midy = self.frame.shape[0] // 2
+
+        # def get_center_offset(lst):
+        #     array = np.asarray(lst)
+        #     avgx = np.mean(array[: ,0])
+        #     avgy = np.mean(array[:, 1])
+        #     x_offset = int(avgx - midx)
+        #     y_offset = int(avgy - midy)
+        #     return x_offset, y_offset
+
+        def get_dists_from_center(points):
+
+            shifted = [(xy[0] - midx, xy[1] - midy) for xy in points]  # shifting all coordinates so their distance from center can be easily detirmined
+            shifted.sort(key=lambda x: abs(x[0]))  # sorting the shifted list by the absolute value of x
+            coords_w_dists = []
+            all_x_dists = []
+            all_y_dists = []
+            # x_offset, y_offset = get_center_offset(points)
+            # relative_center = (0 + x_offset, 0 + y_offset)
+            # relative_center = (midx + x_offset, midy + y_offset)
+            # copy = self.frame.copy()
+            # cv.circle(copy, relative_center, 5, (255, 255, 255), 5)
+            # cv.circle(copy, relative_center, 500, (255, 255, 255), 5)
+            # cv.imwrite('./debug_images/13_relative_center.png', copy)
+            for i in range(len(shifted)):
+                coord = shifted[i]
+
+                centerdist, xdist, ydist = self.get_dist(coord, (0, 0), seperate=True)
+                all_x_dists.append(xdist)
+                all_y_dists.append(ydist)
+                coord = (coord[0] + midx, coord[1] + midy)
+                coord_dist = (coord, centerdist)
+                coords_w_dists.append(coord_dist)
+            coords_w_dists.sort(key=lambda x: x[0])
+            coords_w_dists.sort(key=lambda x: x[1])
+            # for i in coords_w_dists:
+            #     print(i)
+            xoffset = sum(all_x_dists) // len(all_x_dists)
+            yoffset = sum(all_y_dists) // len(all_y_dists)
+
+            #
+            # for i in range(len(shifted)):
+            #     coord = shifted[i]
+            #     x, y = coord[0], coord[1]
+            #     xdist = abs(0 - abs(x))
+            #     ydist = abs(0 - abs(y))
+            #     all_x_dists.append(xdist)
+            #     all_y_dists.append(ydist)
+            #     centerdist = sqrt((xdist ** 2) + (ydist ** 2))
+            #     coord = (coord[0] + midx, coord[1] + midy)
+            #     coord_dist = (coord, centerdist)
+            #     coords_w_dists.append(coord_dist)
+            # coords_w_dists.sort(key=lambda x: x[1])
+            # for i in coords_w_dists:
+            #     print(i)
+
+            return coords_w_dists
+
+        def check_quadrant(point):
+            out = ''
+            x, y = point[0], point[1]
+            if y < midy:
+                out += 'u'
+            elif y > midy:
+                out += 'b'
+            if x < midx:
+                out += 'l'
+            elif x > midx:
+                out += 'r'
+            # print(out)
+            return out
+
+        def find_good_points(p_w_d):
+            pnts = [i[0] for i in p_w_d]
+            good_groups = []
+            quadrants = {'ul': [], 'ur': [], 'br': [], 'bl': []}
+            for ptdist in p_w_d:
+                point = ptdist[0]
+                key = check_quadrant(point)
+                quadrants[key].append(ptdist)
+            # keylist = []
+            for key in quadrants:
+                quadrants[key].sort(key=lambda x: x[1])
+                quadrants[key] = [i[0] for i in quadrants[key]]
+                # keylist.append(key)
+            grouplist = []
+            for i in range(3):                                               # For each or the 3 parts
+                print('round', i)
+                group = []                                                      # Create a new group of points
+                copy = self.frame.copy()
+                for key in quadrants:                                           # For each group in quadrants
+                    print(quadrants)
+                    pt = quadrants[key][0]
+
+                    group.append(pt)                                                # add the smallest of the quadrant to group
+                    cv.circle(copy, pt, 5, (255, 255, 255), 5)
+                    del quadrants[key][0]                                           # delete the value that you just added from the quadrant
+
+                grouplist.append(group)                                         # add the group you just made to the list of groups
+
+                for key in quadrants:                                           # For each group in quadrants:
+                    quadrant = quadrants[key]
+                    killlist = []
+                    for ind in range(len(quadrant)):                                # For each index in the current quadrant
+                        point = quadrant[ind]
+                        for group in grouplist:                                         # For each group in the list of already-added groups
+                            for gpoint in group:                                            # For each known good point in that group
+                                if ind not in killlist and isinline(gpoint, point):                                     # if the point in the current quadrant at the current index is inline with the good point
+                                    killlist.append(ind)                                            # Add that index to the killlist
+                    print('kill:', killlist)
+                    quadrants[key] = self.remove_list_of_indexes(quadrants[key], killlist)   # remove all indexes in the killlist from the quadrant
 
 
+                cv.imwrite('./debug_images/14_quadrant_minimum_point_check' + str(i) + '.png', copy)
+
+            # for i in range(len(p_w_d)):
+            #     if i + 4 <= len(p_w_d):                                    # TODO: Maybe sort points into quadrant lists
+            #         quadrants = {'ul': [], 'ur': [], 'br': [], 'bl': []}   # TODO 1. Get 2 intersection points at a time and check their quadrants
+            #         pt1, pt2 = pnts[i], pnts[i + 1]                                # TODO 2. Then get their distance from eachother
+            #         dist1_2 = self.get_dist(pt1, pt2)                         # TODO 3. Then iterate through the rest of the points until you find a point in one of the other 2 quadrants
+            #                                                                        # TODO 4. Check that the new point has a dist ratio with the initial points of close to 2:1
+            #         pts = [pt1, pt2]
+            #         for pt in pts:
+            #             key = check_quadrant(pt)
+            #             # if quadrants[key] is None:
+            #                 # quadrants[key] = pt
+            #             quadrants[key].append(pt)
+            #             # else:
+            #             #     print('quadrant not empty in check_ratios within check_all_intersections')
+            #             #     print(quadrants)
+            #         print(quadrants)
+            #         for j in range(i + 1, len(pnts)):
+            #             pt3 = pts[j]
+            #             key = check_quadrant(pt3)
+            #             if quadrants[key] is None:
+            #                 dist1_3 = self.get_dist(pt3, pt1)
+            #                 dist2_3 = self.get_dist(pt3, pt2)
+            #                 dists = [dist1_2, dist1_3, dist2_3]
+            #                 # short = min(dists)
+            #                 # dists.remove(short)
+            #                 # mid = min(dists)
+            #                 # long = max(dists)
+            #                 for ind in range(len(dists)):
+            #                     ind2 = (ind + 1) % len(dists)
+            #                     twodists = [dists[ind], dists[ind2]]
+            #                     small = min(twodists)
+            #                     big = max(twodists)
+            #                     ratio = big / small
+            #                     if abs(2 - ratio) < thresh:
+            #                         print('ratio is good!!')
+            #
+            #
+
+                    # group = [pnts[i], pnts[i + 1], pnts[i + 2], pnts[i + 3]]
+                    # for pt in group:
+                    #     point = pt[0]
+                    #     dist = pt[1]
+                    #     key = check_quadrant(point)
+                    #     if quadrants[key] == '':
+                    #         quadrants[key] = point
+                    #     else:
+                    #         print('point at ' + str(point) )
+                    # print(group)
+
+        def check_ratio(dist1, dist2, thresh=0.2):
+            dists = [dist1, dist2]
+            shorter = min(dists)
+            longer = max(dists)
+            longratio = 2 - (longer / shorter)
+            if abs(longratio) < thresh:
+                print('hell yea, ratio be good.')
+                return True
+            else:
+                print('ratio was ' + str(longratio - thresh) + ' off from the threshold')
+                return False
+
+        def isinline(pt1, pt2, return_axis=False):
+            x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+            if x1 == x2 and y1 == y2:
+                print('isinline is being given two of the same point')
+                if return_axis:
+                    return True, 'xy'
+                else:
+                    return True
+            elif x1 == x2:
+                if return_axis:
+                    return True, 'x'
+                else:
+                    return True
+            elif y1 == y2:
+                if return_axis:
+                    return True, 'y'
+                else:
+                    return True
+            else:
+                return False
+
+
+        intersections = self.intersections
+        points_w_dists = get_dists_from_center(intersections)
+        find_good_points(points_w_dists)
 
     @staticmethod
     def max_mid_min(group, axis='x'):
@@ -633,8 +871,8 @@ class Table:
             pt = (x, y)
             return pt
 
-    def find_average_lines_from_groups(self, groups, axis='x'):
-
+    @staticmethod
+    def find_average_lines_from_groups(groups, axis='x'):
         output = []
         # group = np.asarray(groups)
         for group in groups:
@@ -656,6 +894,22 @@ class Table:
             lencount += 1
             del inlist[ind]
         return inlist
+
+    @staticmethod
+    def get_dist(pt1, pt2, seperate=False):
+        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+        xdist = abs(x1 - x2)
+        ydist = abs(y1 - y2)
+        if xdist == 0:
+            dist = ydist
+        elif ydist == 0:
+            dist = xdist
+        else:
+            dist = sqrt((xdist ** 2) + (ydist ** 2))
+        if seperate is True:
+            return dist, xdist, ydist
+        else:
+            return dist
 
     # line_intersection((A, B), (C, D))
 
