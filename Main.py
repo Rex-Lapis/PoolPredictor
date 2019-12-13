@@ -1,3 +1,4 @@
+from imutils.video import FPS
 import cv2 as cv
 import numpy as np
 import imutils
@@ -5,15 +6,24 @@ import cython
 import time
 from math import sqrt
 
+
+
 cv2 = cv
 
 cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip10.mp4')
+fps = FPS().start()
+
 table_color_bgr = (60, 105, 0)
 ballsize = 15
 ratio = (2, 1)
 shape = None
+cur_frame = None
+
+
 
 setting = 2
+
+# TODO: Use table color to determine whether a bumper line is misplaced. could also just use ratio
 
 # TODO: Try analyzing ratio of h & w of table
 
@@ -30,9 +40,11 @@ class Table:
         self.playbox = None
         self.pocketbox = None
         self.tablebox = None
-        self.circles = []
         self.intersections = []
         self.setting = setting_num
+
+        self.circles = []
+        self.balls = []
 
         self.find_table_lines()
         self.find_all_intersections()
@@ -377,52 +389,6 @@ class Table:
             axis = 'y'
         return axis
 
-    def find_balls(self, frame=None, draw=True, setting=2, findballsize=False):
-        if frame is None:
-            frame = self.frame.copy()
-        copy = frame.copy()
-        cropbox = self.pocketbox
-        top, bottom = cropbox[0][1], cropbox[1][1]
-        left, right = cropbox[0][0], cropbox[1][0]
-
-        copy[: top], copy[bottom: ] = (0, 0, 0), (0, 0, 0)
-        copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
-        cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
-
-        gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-        gray = cv.medianBlur(gray, 5)
-
-        if setting == 1:
-            min_dist = frame.shape[0] / 64
-            max_radius = round(frame.shape[0] / 22.5)  # was / 22.5
-            minradius = 5
-            param1 = 53
-            param2 = 30
-            dp = 1
-
-        elif setting == 2:
-            min_dist = 10
-            ballsize_thresh = 1
-            max_radius = ballsize + ballsize_thresh
-            minradius = ballsize - ballsize_thresh
-            param1 = 80
-            param2 = 20
-            dp = 1.5
-
-        if findballsize:
-            minradius = 0
-            max_radius = 50
-            draw = True
-
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
-
-        if draw:
-            frame = self.draw_circles(circles, frame)
-        if findballsize:
-            self.get_ball_size(circles)
-        circle_img = frame
-        return circle_img
-
     def draw_circles(self, circles, frame=None):
         if frame is None:
             frame = self.frame.copy()
@@ -433,6 +399,8 @@ class Table:
                 radius = circle[2]
                 cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
                 cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
+                rect = self.calculate_radius_square(radius, (x, y))
+                cv.rectangle(frame, rect[0], rect[1], (255, 0, 255), 1)
         else:
             print('no circles to draw')
         return frame
@@ -724,11 +692,96 @@ class Table:
             out += 'r'
         return out
 
+    def find_balls(self, frame=None, draw=True, setting=2, findballsize=False):
+        if frame is None:
+            frame = self.frame.copy()
+        copy = frame.copy()
+        cropbox = self.pocketbox
+        top, bottom = cropbox[0][1], cropbox[1][1]
+        left, right = cropbox[0][0], cropbox[1][0]
 
+        copy[: top], copy[bottom: ] = (0, 0, 0), (0, 0, 0)
+        copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
+        cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
+
+        gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
+        gray = cv.medianBlur(gray, 5)
+
+        if setting == 1:
+            min_dist = frame.shape[0] / 64
+            max_radius = round(frame.shape[0] / 22.5)  # was / 22.5
+            minradius = 5
+            param1 = 53
+            param2 = 30
+            dp = 1
+
+        elif setting == 2:
+            min_dist = 10
+            ballsize_thresh = 1
+            max_radius = ballsize + ballsize_thresh
+            minradius = ballsize - ballsize_thresh
+            param1 = 80
+            param2 = 20
+            dp = 1.5
+
+        if findballsize:
+            minradius = 0
+            max_radius = 50
+            draw = True
+
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
+
+        self.find_real_balls(circles)
+
+        if draw:
+            frame = self.draw_circles(circles, frame)
+        if findballsize:
+            self.get_ball_size(circles)
+        return frame
+
+    def find_real_balls(self, circles):
+        for lst in circles:
+            for circ in lst:
+                x, y, r = circ[0], circ[1], circ[2]
+                newball = Ball((x, y), r)
+
+    def calculate_radius_square(self, radius, center):
+        x1, y1 = center[0], center[1]
+        r = radius
+        sqr_length = (r ** 2) / 2
+        dist = sqrt(sqr_length)
+        tl = (int(x1 - dist), int(y1 - dist))
+        br = (int(x1 + dist), int(y1 + dist))
+        return tl, br
+
+
+# TODO: Sample the color in each ball and weigh it against the table color
+# TODO: Check the avg color of each ball against each-other to confirm that they are the same
+# TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
+# TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to see if it's just a shadow
 class Ball:
     def __init__(self, center, radius):
-        self.location = center
-        self.size = radius
+        self.center = center
+        self.radius = radius
+        self.legitscore = 0
+        self.coloravg = self.get_ball_color()
+
+    def calculate_radius_square(self):
+        x1, y1 = self.center[0], self.center[1]
+        r = self.radius
+        print('xy:', x1, y1, 'r', r)
+        sqr_length = (r ** 2) / 2
+        dist = sqrt(sqr_length)
+        tl = (int(x1 - dist), int(y1 - dist))
+        br = (int(x1 + dist), int(y1 + dist))
+        return tl, br
+
+    def get_ball_color(self):
+        tl, br = self.calculate_radius_square()
+        x1, y1 = tl[0], tl[1]
+        x2, y2 = br[0], br[1]
+        cropped = cur_frame[y1: y2, x1: x2]
+        cv.imwrite('./debug_images/15_cropped_ball.png', cropped)
 
 
 def recursive_len(item):
@@ -764,18 +817,21 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
 
 
 def play_frame():
+    global cur_frame
     ret, frame = cap.read()
+    cur_frame = frame
     if ret:
         # table.drawlines(frame)
         table.drawboxes(frame)
         table.find_balls(frame)
-        # frame = draw_circles(frame)
         cv.imshow('frame', frame)
         cv.moveWindow('frame', 0, 0)
-        if cv.waitKey(25) & 0xFF == 27:  # 27 is the esc key's number
-            return False
-        else:
-            return True
+        # if cv.waitKey(25) & 0xFF == 27:  # 27 is the esc key's number
+        #     return False
+        # else:
+        #     return True
+        cv2.waitKey(1)
+        return True
     else:
         return False
 
@@ -788,8 +844,14 @@ def main():
         print("error opening video")
     while cap.isOpened():
         playing = play_frame()
+
+        fps.update()
         if not playing:
             break
+
+    fps.stop()
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
     cap.release()
     cv.destroyAllWindows()
