@@ -1,27 +1,28 @@
 from imutils.video import FPS
 import cv2 as cv
 import numpy as np
-import imutils
-import cython
-import time
 from math import sqrt
-
-
 
 cv2 = cv
 
 cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip10.mp4')
 fps = FPS().start()
 
+# Currently unused, this is here to potentially calculate the difference at some point of the table
 table_color_bgr = (60, 105, 0)
+# This is the average radius in pixels of a ball in the images. There is a findballsize parameter in find_balls
+# that can be used to identify average size
 ballsize = 15
-ratio = (2, 1)
+# This is the number of past frames to keep the found circles for identifying trajectories and deciding which
+# balls are real
+ballframebuffer = 5
+# This setting is for the canny and lines used to identify the table boundaries
+setting = 2
+
+# These are global for the shape of the frame, and the frame itself
 shape = None
 cur_frame = None
 
-
-
-setting = 2
 
 # TODO: Use table color to determine whether a bumper line is misplaced. could also just use ratio
 
@@ -43,7 +44,9 @@ class Table:
         self.intersections = []
         self.setting = setting_num
 
+        self.circlehistory = []
         self.circles = []
+        self.ballhistory = []
         self.balls = []
 
         self.find_table_lines()
@@ -394,7 +397,7 @@ class Table:
             frame = self.frame.copy()
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            for circle in circles[0, :]:
+            for circle in circles:
                 x, y = circle[0], circle[1]
                 radius = circle[2]
                 cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
@@ -731,7 +734,14 @@ class Table:
 
         circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
 
-        self.find_real_balls(circles)
+        circles = circles[0]
+
+        self.circles = circles
+
+        self.circlehistory.append(circles)
+        if len(self.circlehistory) > ballframebuffer:
+            del self.circlehistory[0]
+        print(len(self.circlehistory))
 
         if draw:
             frame = self.draw_circles(circles, frame)
@@ -739,11 +749,16 @@ class Table:
             self.get_ball_size(circles)
         return frame
 
+        self.find_real_balls()
+
     def find_real_balls(self, circles):
-        for lst in circles:
-            for circ in lst:
-                x, y, r = circ[0], circ[1], circ[2]
-                newball = Ball((x, y), r)
+        if circles is None:
+            circles = self.circles
+        for ind in range(len(circles)):
+            circ = circles[ind]
+            x, y, r = circ[0], circ[1], circ[2]
+            newball = Ball((x, y), r, ind)
+            pass
 
     def calculate_radius_square(self, radius, center):
         x1, y1 = center[0], center[1]
@@ -760,11 +775,11 @@ class Table:
 # TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
 # TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to see if it's just a shadow
 class Ball:
-    def __init__(self, center, radius):
+    def __init__(self, center, radius, numinlist):
         self.center = center
         self.radius = radius
         self.legitscore = 0
-        self.coloravg = self.get_ball_color()
+        self.coloravg = self.get_ball_color(numinlist)
 
     def calculate_radius_square(self):
         x1, y1 = self.center[0], self.center[1]
@@ -776,12 +791,19 @@ class Ball:
         br = (int(x1 + dist), int(y1 + dist))
         return tl, br
 
-    def get_ball_color(self):
+    def get_ball_color(self, number):
         tl, br = self.calculate_radius_square()
         x1, y1 = tl[0], tl[1]
         x2, y2 = br[0], br[1]
         cropped = cur_frame[y1: y2, x1: x2]
-        cv.imwrite('./debug_images/15_cropped_ball.png', cropped)
+        cv.imwrite('./debug_images/ball_crop/15_cropped_ball_' + str(number) + '.png', cropped)
+
+        avg_b = np.mean(cropped[:, :, 0])
+        avg_g = np.mean(cropped[:, :, 1])
+        avg_r = np.mean(cropped[:, :, 2])
+        avg = (avg_b, avg_g, avg_r)
+        # print(avg)
+        return avg
 
 
 def recursive_len(item):
