@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="Added FPS tracking. Also added a global copy of each frame so that ball &#10;objects can easily access them for color checking. Added circles and balls&#10;lists to the Table class. Added a find_real_balls method to table to&#10;sort through the circles and decide whether to actually grant them ballship.&#10;created calculate_radius_square method to find the upper left and bottom&#10;right corners of each detected ball so that the color can be averaged easily.&#10;Also started adding to the Ball class. they now automatically take a crop &#10;of the image for color averaging. I haven't yet implemented the actual&#10;averaging operation. Also changed the cv.waitKey from triggering when esc&#10;is pressed to just cv.waitKey(1). I don't know why, but in a test, having&#10;a specific waitkey seemed to lower the frame rate considerably.">
+    <list default="true" id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/debug_images/10_ball_area_crop.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/10_ball_area_crop.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/10_final_lines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/10_final_lines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/1_canny_check.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/1_canny_check.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/2_canny_check_lines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/2_canny_check_lines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/3_slope_filter.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/3_slope_filter.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/4_horizontal_split.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/4_horizontal_split.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/4_vertical_split.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/4_vertical_split.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_bottomlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_bottomlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_leftlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_leftlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_rightlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_rightlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_toplines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_toplines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_bottomlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_bottomlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_leftlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_leftlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_rightlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_rightlines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_toplines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_toplines.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/7_grouped.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/7_grouped.png" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -20,9 +35,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="123">
-              <caret line="745" column="41" lean-forward="true" selection-start-line="745" selection-start-column="41" selection-end-line="745" selection-end-column="41" />
+            <state relative-caret-position="210">
+              <caret line="714" column="76" selection-start-line="714" selection-start-column="76" selection-end-line="715" selection-end-column="69" />
               <folding>
+                <element signature="e#310#422#0" />
+                <element signature="e#481#591#0" />
                 <element signature="e#311#409#0" />
                 <element signature="e#519#1232#0" />
                 <element signature="e#1274#6178#0" />
@@ -85,6 +102,9 @@
                 <element signature="e#13767#13816#0" />
                 <element signature="e#13887#13958#0" />
                 <element signature="e#14084#14381#0" />
+                <element signature="e#15954#16553#0" />
+                <element signature="e#16054#16478#0" />
+                <element signature="e#16151#16478#0" />
                 <element signature="e#16619#17184#0" />
                 <element signature="e#16679#17184#0" />
                 <element signature="e#16776#17044#0" />
@@ -133,25 +153,30 @@
                 <element signature="e#27161#27243#0" />
                 <element signature="e#27337#27712#0" />
                 <element signature="e#27759#28080#0" />
-                <element signature="e#26673#28068#0" />
                 <element signature="e#27210#27401#0" />
                 <element signature="e#27442#27659#0" />
                 <element signature="e#27698#27763#0" />
+                <element signature="e#28671#28750#0" />
                 <element signature="e#28174#28402#0" />
+                <element signature="e#28429#28503#0" />
+                <element signature="e#29086#29314#0" />
+                <element signature="e#29594#30005#0" />
                 <element signature="e#28996#29108#0" />
                 <element signature="e#29156#29312#0" />
                 <element signature="e#29353#29439#0" />
                 <element signature="e#29505#29828#0" />
-                <element signature="e#30327#30756#0" />
+                <element signature="e#30217#30634#0" />
+                <element signature="e#29897#30277#0" />
+                <element signature="e#30102#30165#0" />
                 <element signature="e#30487#30573#0" />
-                <marker date="1576213546086" expanded="false" signature="31533:31534" ph="..." />
+                <marker date="1576265536180" expanded="false" signature="35353:35354" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/debug_images/15_cropped_ball.png">
+        <entry file="file://$PROJECT_DIR$/debug_images/10_adaptive_thresh.png">
           <provider selected="true" editor-type-id="images" />
         </entry>
       </file>
@@ -232,6 +257,8 @@
       <find>fps</find>
       <find>args</find>
       <find>read</find>
+      <find>[887.25, 822.75, 15.05]</find>
+      <find>is_sam</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -438,22 +465,46 @@
       <option name="project" value="LOCAL" />
       <updated>1576198632875</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Added FPS tracking. Also added a global copy of each frame so that ball &#10;objects can easily access them for color checking. Added circles and balls&#10;lists to the Table class. Added a find_real_balls method to table to&#10;sort through the circles and decide whether to actually grant them ballship.&#10;created calculate_radius_square method to find the upper left and bottom&#10;right corners of each detected ball so that the color can be averaged easily.&#10;Also started adding to the Ball class. they now automatically take a crop &#10;of the image for color averaging. I haven't yet implemented the actual&#10;averaging operation. Also changed the cv.waitKey from triggering when esc&#10;is pressed to just cv.waitKey(1). I don't know why, but in a test, having&#10;a specific waitkey seemed to lower the frame rate considerably.">
+      <created>1576214160872</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1576214160872</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Added some descriptions for each of the global settings. find_balls now &#10;appends the circles found in each frame to the Table.circlehistory list,&#10;and deletes the oldest item, keeping the list ballframebuffer frames long.&#10;also made it so that get_ball_color is passed the balls number in the &#10;list, so that a seperate debug image can be output for each ball.">
+      <created>1576258723574</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1576258723574</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
+  </component>
+  <component name="TodoView" selected-index="4">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.11608094" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" weight="0.119791664" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32920355" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.38053098" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.38053098" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39823008" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info active="true" anchor="bottom" id="TODO" order="6" visible="true" weight="0.32920355" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32920355" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.02189781" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
@@ -491,12 +542,11 @@
     <MESSAGE value="Got rid of some old unused functions and methods, and tons of old commented out lines.&#10;made the check_all_intersections method returns the list of known good points.&#10;replaced the set_boxes method with one that takes those known good points&#10;and sets them as the tables playbox, pocketbox, and tablebox attributes.&#10;added a drawboxes method to table that is called from play_frame() for &#10;if you want to be able to see the boundary boxes on the live playback." />
     <MESSAGE value="Removed some more old unused functions and re-organized the Table.find_balls()&#10;method a bit. I added the ability to have different ball detection settings. &#10;I also Started the ball class.&#10;&#10;Next, I need to figure out how to make it figure out which balls are the&#10;from one frame to the next, so that I can draw the directional prediction &#10;lines" />
     <MESSAGE value="Added FPS tracking. Also added a global copy of each frame so that ball &#10;objects can easily access them for color checking. Added circles and balls&#10;lists to the Table class. Added a find_real_balls method to table to&#10;sort through the circles and decide whether to actually grant them ballship.&#10;created calculate_radius_square method to find the upper left and bottom&#10;right corners of each detected ball so that the color can be averaged easily.&#10;Also started adding to the Ball class. they now automatically take a crop &#10;of the image for color averaging. I haven't yet implemented the actual&#10;averaging operation. Also changed the cv.waitKey from triggering when esc&#10;is pressed to just cv.waitKey(1). I don't know why, but in a test, having&#10;a specific waitkey seemed to lower the frame rate considerably." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added FPS tracking. Also added a global copy of each frame so that ball &#10;objects can easily access them for color checking. Added circles and balls&#10;lists to the Table class. Added a find_real_balls method to table to&#10;sort through the circles and decide whether to actually grant them ballship.&#10;created calculate_radius_square method to find the upper left and bottom&#10;right corners of each detected ball so that the color can be averaged easily.&#10;Also started adding to the Ball class. they now automatically take a crop &#10;of the image for color averaging. I haven't yet implemented the actual&#10;averaging operation. Also changed the cv.waitKey from triggering when esc&#10;is pressed to just cv.waitKey(1). I don't know why, but in a test, having&#10;a specific waitkey seemed to lower the frame rate considerably." />
+    <MESSAGE value="Added some descriptions for each of the global settings. find_balls now &#10;appends the circles found in each frame to the Table.circlehistory list,&#10;and deletes the oldest item, keeping the list ballframebuffer frames long.&#10;also made it so that get_ball_color is passed the balls number in the &#10;list, so that a seperate debug image can be output for each ball." />
+    <MESSAGE value="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic." />
+    <option name="LAST_COMMIT_MESSAGE" value="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic." />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/debug_images/old/6_leftlines_avg.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/debug_images/old/5_rightlines.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -837,11 +887,16 @@
     <entry file="file://$PROJECT_DIR$/debug_images/15_cropped_ball.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/10_adaptive_thresh.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="123">
-          <caret line="745" column="41" lean-forward="true" selection-start-line="745" selection-start-column="41" selection-end-line="745" selection-end-column="41" />
+        <state relative-caret-position="210">
+          <caret line="714" column="76" selection-start-line="714" selection-start-column="76" selection-end-line="715" selection-end-column="69" />
           <folding>
+            <element signature="e#310#422#0" />
+            <element signature="e#481#591#0" />
             <element signature="e#311#409#0" />
             <element signature="e#519#1232#0" />
             <element signature="e#1274#6178#0" />
@@ -904,6 +959,9 @@
             <element signature="e#13767#13816#0" />
             <element signature="e#13887#13958#0" />
             <element signature="e#14084#14381#0" />
+            <element signature="e#15954#16553#0" />
+            <element signature="e#16054#16478#0" />
+            <element signature="e#16151#16478#0" />
             <element signature="e#16619#17184#0" />
             <element signature="e#16679#17184#0" />
             <element signature="e#16776#17044#0" />
@@ -952,18 +1010,23 @@
             <element signature="e#27161#27243#0" />
             <element signature="e#27337#27712#0" />
             <element signature="e#27759#28080#0" />
-            <element signature="e#26673#28068#0" />
             <element signature="e#27210#27401#0" />
             <element signature="e#27442#27659#0" />
             <element signature="e#27698#27763#0" />
+            <element signature="e#28671#28750#0" />
             <element signature="e#28174#28402#0" />
+            <element signature="e#28429#28503#0" />
+            <element signature="e#29086#29314#0" />
+            <element signature="e#29594#30005#0" />
             <element signature="e#28996#29108#0" />
             <element signature="e#29156#29312#0" />
             <element signature="e#29353#29439#0" />
             <element signature="e#29505#29828#0" />
-            <element signature="e#30327#30756#0" />
+            <element signature="e#30217#30634#0" />
+            <element signature="e#29897#30277#0" />
+            <element signature="e#30102#30165#0" />
             <element signature="e#30487#30573#0" />
-            <marker date="1576213546086" expanded="false" signature="31533:31534" ph="..." />
+            <marker date="1576265536180" expanded="false" signature="35353:35354" ph="..." />
           </folding>
         </state>
       </provider>

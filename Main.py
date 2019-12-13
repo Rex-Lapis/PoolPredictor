@@ -5,7 +5,7 @@ from math import sqrt
 
 cv2 = cv
 
-cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip10.mp4')
+cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip5.mp4')
 fps = FPS().start()
 
 # Currently unused, this is here to potentially calculate the difference at some point of the table
@@ -17,7 +17,7 @@ ballsize = 15
 # balls are real
 ballframebuffer = 5
 # This setting is for the canny and lines used to identify the table boundaries
-setting = 2
+table_detect_setting = 2
 
 # These are global for the shape of the frame, and the frame itself
 shape = None
@@ -707,8 +707,13 @@ class Table:
         copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
         cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
 
+        adapt_type = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
+        thresh_type = cv2.THRESH_BINARY_INV
+
         gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-        gray = cv.medianBlur(gray, 5)
+        blur = cv.medianBlur(gray, 5)
+        # thresh = cv2.adaptiveThreshold(blur, 255, adapt_type, thresh_type, 15, 2)
+        # cv.imwrite('./debug_images/10_adaptive_thresh.png', thresh)
 
         if setting == 1:
             min_dist = frame.shape[0] / 64
@@ -732,33 +737,57 @@ class Table:
             max_radius = 50
             draw = True
 
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
+        circles = cv.HoughCircles(blur, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
 
         circles = circles[0]
 
-        self.circles = circles
-
-        self.circlehistory.append(circles)
+        self.circlehistory.append(self.circles)
         if len(self.circlehistory) > ballframebuffer:
             del self.circlehistory[0]
-        print(len(self.circlehistory))
+
+        self.circles = circles
+
+        # self.circlehistory = [list([list(j) for j in i]) for i in self.circlehistory]
+        # self.circles = [list(i) for i in self.circles]
+        #
+        # print(self.circles)
+        # print(self.circlehistory)
+        # print('\n')
+        #
+        # if list(self.circles) in self.circlehistory:
+        #     print('same circles')
 
         if draw:
             frame = self.draw_circles(circles, frame)
         if findballsize:
             self.get_ball_size(circles)
-        return frame
 
         self.find_real_balls()
+        # self.is_same_ball()
+        return frame
 
-    def find_real_balls(self, circles):
+    def find_real_balls(self, circles=None):
+        self.ballhistory.append(self.balls)
+        self.balls = []
         if circles is None:
             circles = self.circles
+        balllist = []
         for ind in range(len(circles)):
             circ = circles[ind]
             x, y, r = circ[0], circ[1], circ[2]
-            newball = Ball((x, y), r, ind)
-            pass
+            newball = Ball((x, y), r, ind, self.ballhistory)
+            # newball.findlastposition(self.ballhistory)
+            balllist.append(newball)
+            self.balls.append(newball)
+        if len(self.ballhistory) > ballframebuffer:
+            del self.ballhistory[0]
+        # for ball in self.balls:
+        #     self.is_same_ball(ball)
+
+    # def is_same_ball(self, ball):
+    #     center =
+
+        pass
 
     def calculate_radius_square(self, radius, center):
         x1, y1 = center[0], center[1]
@@ -773,18 +802,25 @@ class Table:
 # TODO: Sample the color in each ball and weigh it against the table color
 # TODO: Check the avg color of each ball against each-other to confirm that they are the same
 # TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
-# TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to see if it's just a shadow
+# TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to /
+#  see if it's just a shadow
 class Ball:
-    def __init__(self, center, radius, numinlist):
+    def __init__(self, center, radius, numinlist, history):
+        self.movementthresh =10
         self.center = center
         self.radius = radius
+        self.lastpos, self.lastdist = self.findlastposition(history)
+        print(self.lastpos)
         self.legitscore = 0
         self.coloravg = self.get_ball_color(numinlist)
+        if len(self.lastpos) > 0:
+            if self.is_moving():
+                line = self.get_movement_direction()
+
 
     def calculate_radius_square(self):
         x1, y1 = self.center[0], self.center[1]
         r = self.radius
-        print('xy:', x1, y1, 'r', r)
         sqr_length = (r ** 2) / 2
         dist = sqrt(sqr_length)
         tl = (int(x1 - dist), int(y1 - dist))
@@ -804,6 +840,56 @@ class Ball:
         avg = (avg_b, avg_g, avg_r)
         # print(avg)
         return avg
+
+    def findlastposition(self, history):
+        center = self.center
+        r = self.radius
+        lastpos = []
+        # print(history)
+        for ball in history[-1]:
+            center2 = ball.center
+            dist = get_dist(center, center2)
+
+            lastpos.append((center2, dist))
+        if len(lastpos) > 0:
+            lastpos.sort(key=lambda x: x[1])
+            return lastpos[0][0], lastpos[0][1]
+        else:
+            return [], None
+
+    def is_moving(self):
+        if self.lastdist > self.movementthresh:
+            return True
+        else:
+            return False
+
+    def get_movement_direction(self):
+        dist, x, y = get_dist(self.center, self.lastpos, seperate=True, absolute=False)
+        slope = y / x
+
+
+    # TODO: I am currently trying to figure out how to draw a line in the direction of motion for each ball
+
+
+def get_dist(pt1, pt2, seperate=False, absolute=True):
+    x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+    if absolute:
+        xdist = abs(x1 - x2)
+        ydist = abs(y1 - y2)
+    else:
+        # pt1 should be the newest point, pt2 the older
+        xdist = x1 - x2
+        ydist = y1 - y2
+    if xdist == 0:
+        dist = ydist
+    elif ydist == 0:
+        dist = xdist
+    else:
+        dist = sqrt((xdist ** 2) + (ydist ** 2))
+    if seperate is True:
+        return dist, xdist, ydist
+    else:
+        return dist
 
 
 def recursive_len(item):
@@ -861,7 +947,7 @@ def play_frame():
 def main():
     global table
     if cap.isOpened():
-        table = Table(setting_num=setting)
+        table = Table(setting_num=table_detect_setting)
     else:
         print("error opening video")
     while cap.isOpened():
