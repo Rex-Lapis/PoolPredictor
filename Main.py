@@ -7,9 +7,9 @@ from math import sqrt
 
 cv2 = cv
 
-cap = cv.VideoCapture('2019_PoolChamp_Clip7.mp4')
+cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip10.mp4')
 table_color_bgr = (60, 105, 0)
-table_color_thresh = 30
+ballsize = 15
 ratio = (2, 1)
 shape = None
 
@@ -30,6 +30,7 @@ class Table:
         self.playbox = None
         self.pocketbox = None
         self.tablebox = None
+        self.circles = []
         self.intersections = []
         self.setting = setting_num
 
@@ -376,7 +377,7 @@ class Table:
             axis = 'y'
         return axis
 
-    def find_balls(self, frame=None, draw=True):
+    def find_balls(self, frame=None, draw=True, setting=2, findballsize=False):
         if frame is None:
             frame = self.frame.copy()
         copy = frame.copy()
@@ -390,11 +391,54 @@ class Table:
 
         gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
         gray = cv.medianBlur(gray, 5)
-        min_dist = frame.shape[0] / 64
-        max_radius = round(frame.shape[0] / 22.5)  # was / 22.5
 
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, min_dist, param1=53, param2=30, minRadius=5,
-                                  maxRadius=max_radius)
+        if setting == 1:
+            min_dist = frame.shape[0] / 64
+            max_radius = round(frame.shape[0] / 22.5)  # was / 22.5
+            minradius = 5
+            param1 = 53
+            param2 = 30
+            dp = 1
+
+        elif setting == 2:
+            min_dist = 10
+            ballsize_thresh = 1
+            max_radius = ballsize + ballsize_thresh
+            minradius = ballsize - ballsize_thresh
+            param1 = 80
+            param2 = 20
+            dp = 1.5
+
+        if findballsize:
+            minradius = 0
+            max_radius = 50
+            draw = True
+
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
+
+        if draw:
+            frame = self.draw_circles(circles, frame)
+        if findballsize:
+            self.get_ball_size(circles)
+        circle_img = frame
+        return circle_img
+
+    def draw_circles(self, circles, frame=None):
+        if frame is None:
+            frame = self.frame.copy()
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                x, y = circle[0], circle[1]
+                radius = circle[2]
+                cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
+                cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
+        else:
+            print('no circles to draw')
+        return frame
+
+    @staticmethod
+    def get_ball_size(self, circles):
         radiuslist = []
         if circles is not None:
             circles = np.uint16(np.around(circles))
@@ -402,12 +446,10 @@ class Table:
                 x, y = circle[0], circle[1]
                 radius = circle[2]
                 radiuslist.append(radius)
-                if draw:
-                    cv.circle(frame, (x, y), radius, (0, 255, 0), 2)
-                    cv.circle(frame, (x, y), 2, (0, 0, 255), 3)
-        circle_img = frame
-        # print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)))
-        return circle_img
+                # if draw:
+                #     cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
+                #     cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
+            print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)), 'avg:', str(sum(radiuslist) / len(radiuslist)))
 
     def set_boxes(self, goodpoints):
         playfield_points = goodpoints[0]
@@ -445,33 +487,6 @@ class Table:
         copy = self.frame.copy()
         cv.rectangle(copy, self.tablebox[0], self.tablebox[1], (0, 200, 255), 2)
         cv.imwrite('./debug_images/8_tablebox_check.png', copy)
-
-    # def set_boxes(self):
-    #     print('Set bounding-boxes for parts of table...')
-    #     tablelines = self.tablelines
-    #     pocketlines = self.pocketlines
-    #     playlines = self.playfieldlines
-    #
-    #     groups = {'table': tablelines, 'pocket': pocketlines, 'play': playlines}
-    #     points = {'table': None, 'pocket': None, 'play': None}
-    #
-    #     for key in groups:
-    #         top_l = self.find_line_intersection(groups[key]['top'], groups[key]['left'])
-    #         top_r = self.find_line_intersection(groups[key]['top'], groups[key]['right'])
-    #         bot_l = self.find_line_intersection(groups[key]['bottom'], groups[key]['left'])
-    #         bot_r = self.find_line_intersection(groups[key]['bottom'], groups[key]['right'])
-    #         copy = self.frame.copy()
-    #         cv.circle(copy, top_l, 5, (0, 0, 255), 4)
-    #         cv.circle(copy, top_r, 5, (0, 0, 255), 4)
-    #         cv.circle(copy, bot_l, 5, (0, 0, 255), 4)
-    #         cv.circle(copy, bot_r, 5, (0, 0, 255), 4)
-    #         cv.rectangle(copy, top_l, bot_r, (0, 255, 0), 2)
-    #         cv.imwrite('./debug_images/9_'+ key + '_box_check.png', copy)
-    #         points[key] = {'tl': top_l, 'br': bot_r, 'bl': bot_l, 'tr': top_r}
-    #
-    #     self.tablebox = (points['table']['tl'], points['table']['br'])
-    #     self.pocketbox = (points['pocket']['tl'], points['pocket']['br'])
-    #     self.playbox = (points['play']['tl'], points['play']['br'])
 
     def find_all_intersections(self, lines=None):
         print('Finding all intersections...')
@@ -710,6 +725,12 @@ class Table:
         return out
 
 
+class Ball:
+    def __init__(self, center, radius):
+        self.location = center
+        self.size = radius
+
+
 def recursive_len(item):
     if type(item) == list:
         return sum(recursive_len(subitem) for subitem in item)
@@ -742,47 +763,6 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
     return edged
 
 
-def check_contour_shape(contour):
-    shape = None
-    peri = cv.arcLength(contour, True)
-    approx = cv.approxPolyDP(contour, 0.04 * peri, True)
-
-    if len(approx) == 4:
-        # compute the bounding box of the contour and use the
-        # bounding box to compute the aspect ratio
-        (x, y, w, h) = cv.boundingRect(approx)
-        ar = w / float(h)
-
-        # a square will have an aspect ratio that is approximately
-        # equal to one, otherwise, the shape is a rectangle
-
-        shape = "square" if 1.05 >= ar >= 0.95 else "rectangle"
-
-
-def draw_circles(img):
-    img = img.copy()
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    gray = cv.medianBlur(gray, 5)
-    min_dist = img.shape[0]/64
-    max_radius = round(img.shape[0]/22.5)  # was / 22.5
-
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, min_dist, param1=53, param2=30, minRadius=5, maxRadius=max_radius)
-    radiuslist = []
-    if circles is not None:
-        print(len(circles), 'circles')
-        circles = np.uint16(np.around(circles))
-        for circle in circles[0, :]:
-            x, y = circle[0], circle[1]
-            print(x, y)
-            radius = circle[2]
-            radiuslist.append(radius)
-            cv.circle(img, (x, y), radius, (0, 255, 0), 2)
-            cv.circle(img, (x, y), 2, (0, 0, 255), 3)
-    circle_img = img
-    # print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)))
-    return circle_img
-
-
 def play_frame():
     ret, frame = cap.read()
     if ret:
@@ -791,12 +771,7 @@ def play_frame():
         table.find_balls(frame)
         # frame = draw_circles(frame)
         cv.imshow('frame', frame)
-        # frame = crop(frame)
-#         find_table(frame)
-#         # circles = draw_circles(frame)
-#         cv.imshow('frame', frame)
-#         # cv.imshow('circles', circles)
-#         # cv.moveWindow('circles', 20, 20)
+        cv.moveWindow('frame', 0, 0)
         if cv.waitKey(25) & 0xFF == 27:  # 27 is the esc key's number
             return False
         else:
