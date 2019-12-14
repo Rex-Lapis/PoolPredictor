@@ -5,7 +5,7 @@ from math import sqrt
 
 cv2 = cv
 
-cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip5.mp4')
+cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip7.mp4')
 fps = FPS().start()
 
 # Currently unused, this is here to potentially calculate the difference at some point of the table
@@ -762,11 +762,11 @@ class Table:
         if findballsize:
             self.get_ball_size(circles)
 
-        self.find_real_balls()
+        frame = self.find_real_balls(frame)
         # self.is_same_ball()
         return frame
 
-    def find_real_balls(self, circles=None):
+    def find_real_balls(self, frame, circles=None):
         self.ballhistory.append(self.balls)
         self.balls = []
         if circles is None:
@@ -775,19 +775,18 @@ class Table:
         for ind in range(len(circles)):
             circ = circles[ind]
             x, y, r = circ[0], circ[1], circ[2]
-            newball = Ball((x, y), r, ind, self.ballhistory)
+            newball = Circle((x, y), r, ind, self.ballhistory)
             # newball.findlastposition(self.ballhistory)
+
+            if newball.line is not None:
+                pt1, pt2 = newball.line[0], newball.line[1]
+                cv.line(frame, pt1, pt2, (255, 255, 255), 2)
+
             balllist.append(newball)
             self.balls.append(newball)
         if len(self.ballhistory) > ballframebuffer:
             del self.ballhistory[0]
-        # for ball in self.balls:
-        #     self.is_same_ball(ball)
-
-    # def is_same_ball(self, ball):
-    #     center =
-
-        pass
+        return frame
 
     def calculate_radius_square(self, radius, center):
         x1, y1 = center[0], center[1]
@@ -804,19 +803,22 @@ class Table:
 # TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
 # TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to /
 #  see if it's just a shadow
-class Ball:
+class Circle:
     def __init__(self, center, radius, numinlist, history):
-        self.movementthresh =10
+        # TODO: Make location history list, rather than a single last location
+        # TODO: When a ball is missed for a single frame and reappears, the program thinks it came from the nearest ball
+        # TODO: Next, have it find the positional history and draw the lines based on that.
+        self.movementthresh = 10
         self.center = center
         self.radius = radius
         self.lastpos, self.lastdist = self.findlastposition(history)
-        print(self.lastpos)
         self.legitscore = 0
         self.coloravg = self.get_ball_color(numinlist)
-        if len(self.lastpos) > 0:
+        self.line = None
+        self.inpocket = False
+        if self.lastpos is not None and len(self.lastpos) > 0:
             if self.is_moving():
-                line = self.get_movement_direction()
-
+                self.line = self.get_movement_path()
 
     def calculate_radius_square(self):
         x1, y1 = self.center[0], self.center[1]
@@ -841,19 +843,34 @@ class Ball:
         # print(avg)
         return avg
 
-    def findlastposition(self, history):
+    def findlastposition(self, history, dist_thresh=60):
         center = self.center
         r = self.radius
         lastpos = []
-        # print(history)
-        for ball in history[-1]:
+        for ball in history[-1]:  # This is how it was. Still works. Just keeping as backup
             center2 = ball.center
             dist = get_dist(center, center2)
 
             lastpos.append((center2, dist))
+
+        # This one is the start of the version that saves info going back more than one frame
+        previous = None
+        # for i in range(len(history)):
+        #     ind = -i
+        #     if i == 0:
+        #         center = self.center
+        #         r = self.radius
+        #     else:
+        #         center = history[ind]
+        #     for ball in lst:
         if len(lastpos) > 0:
             lastpos.sort(key=lambda x: x[1])
-            return lastpos[0][0], lastpos[0][1]
+            pos = lastpos[0][0]
+            dist = lastpos[0][1]
+            if dist < dist_thresh:
+                return pos, dist
+            else:
+                return None, None
         else:
             return [], None
 
@@ -863,9 +880,19 @@ class Ball:
         else:
             return False
 
-    def get_movement_direction(self):
-        dist, x, y = get_dist(self.center, self.lastpos, seperate=True, absolute=False)
+    def get_movement_path(self):
+        playbox = table.playbox
+        print(playbox)
+        leftx = playbox[0][0]
+        uppery = playbox[0][1]
+        rightx = playbox[1][0]
+        lowery = playbox[1][1]
+        x1, y1 = self.center[0], self.center[1]
+        x2, y2 = self.lastpos[0], self.lastpos[1]
+        dist, x, y = get_dist(self.center, self.lastpos, seperate=True) # , absolute=False)
+
         slope = y / x
+        return [(x1, y1), (x2, y2)]
 
 
     # TODO: I am currently trying to figure out how to draw a line in the direction of motion for each ball
