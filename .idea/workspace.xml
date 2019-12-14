@@ -4,22 +4,23 @@
     <list default="true" id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/10_ball_area_crop.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/10_ball_area_crop.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/10_final_lines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/10_final_lines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/1_canny_check.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/1_canny_check.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/2_canny_check_lines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/2_canny_check_lines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/3_slope_filter.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/3_slope_filter.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/4_horizontal_split.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/4_horizontal_split.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/4_vertical_split.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/4_vertical_split.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/5_bottomlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_bottomlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/5_leftlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_leftlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/5_rightlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_rightlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/5_toplines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/5_toplines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_bottomlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_bottomlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_leftlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_leftlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_rightlines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_rightlines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_toplines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/6_averaged_toplines.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/7_grouped.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/7_grouped.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/10_ball_area_crop.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/10_final_lines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/1_canny_check.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/2_canny_check_lines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/3_slope_filter.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/4_horizontal_split.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/4_vertical_split.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_bottomlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_leftlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_rightlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/5_toplines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_bottomlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_leftlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_rightlines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/6_averaged_toplines.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/7_grouped.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_images/old/10_ball_area_crop.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/old/10_ball_area_crop.png" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -35,13 +36,12 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="714" column="76" selection-start-line="714" selection-start-column="76" selection-end-line="715" selection-end-column="69" />
+            <state relative-caret-position="108">
+              <caret line="791" column="23" selection-start-line="791" selection-start-column="23" selection-end-line="791" selection-end-column="23" />
               <folding>
                 <element signature="e#310#422#0" />
                 <element signature="e#481#591#0" />
                 <element signature="e#311#409#0" />
-                <element signature="e#519#1232#0" />
                 <element signature="e#1274#6178#0" />
                 <element signature="e#1326#1387#0" />
                 <element signature="e#1629#2952#0" />
@@ -157,26 +157,28 @@
                 <element signature="e#27442#27659#0" />
                 <element signature="e#27698#27763#0" />
                 <element signature="e#28671#28750#0" />
+                <element signature="e#29874#29918#0" />
                 <element signature="e#28174#28402#0" />
-                <element signature="e#28429#28503#0" />
+                <element signature="e#32054#32284#0" />
                 <element signature="e#29086#29314#0" />
-                <element signature="e#29594#30005#0" />
+                <element signature="e#34258#34273#0" />
                 <element signature="e#28996#29108#0" />
                 <element signature="e#29156#29312#0" />
-                <element signature="e#29353#29439#0" />
                 <element signature="e#29505#29828#0" />
-                <element signature="e#30217#30634#0" />
-                <element signature="e#29897#30277#0" />
                 <element signature="e#30102#30165#0" />
-                <element signature="e#30487#30573#0" />
-                <marker date="1576265536180" expanded="false" signature="35353:35354" ph="..." />
+                <marker date="1576362836798" expanded="false" signature="41277:41278" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/debug_images/10_adaptive_thresh.png">
+        <entry file="file://$PROJECT_DIR$/debug_images/old/16_ungrouped_circles.png">
+          <provider selected="true" editor-type-id="images" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/debug_images/old/10_adaptive_thresh.png">
           <provider selected="true" editor-type-id="images" />
         </entry>
       </file>
@@ -230,8 +232,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>imshow</find>
-      <find>cv.lin</find>
       <find>print</find>
       <find>check</find>
       <find>canny_check</find>
@@ -259,6 +259,9 @@
       <find>read</find>
       <find>[887.25, 822.75, 15.05]</find>
       <find>is_sam</find>
+      <find>color</find>
+      <find>table</find>
+      <find>115</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -282,8 +285,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="width" value="1920" />
-    <option name="height" value="1200" />
+    <option name="width" value="1440" />
+    <option name="height" value="900" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -303,6 +306,12 @@
               <item name="PoolPredictor" type="462c0819:PsiDirectoryNode" />
               <item name="debug_images" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="PoolPredictor" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PoolPredictor" type="462c0819:PsiDirectoryNode" />
+              <item name="debug_images" type="462c0819:PsiDirectoryNode" />
+              <item name="frames" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -317,14 +326,14 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/debug_images/old" />
+      <recent name="$PROJECT_DIR$/clips" />
+      <recent name="$PROJECT_DIR$/depr" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/depr" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/clips" />
-      <recent name="$PROJECT_DIR$/depr" />
-      <recent name="$PROJECT_DIR$/debug_images/old" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -479,7 +488,21 @@
       <option name="project" value="LOCAL" />
       <updated>1576258723574</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic.">
+      <created>1576266033852</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1576266033852</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Renamed the Ball class to Circle, so that I can have a subclass Ball &#10;that is only for graduated circles. Added a distance threshold for the &#10;circles find_last_position method that returns None for lastpos and dist&#10;if the distance is too high. This is to make it easy while iterating to&#10;know where HoughCircles missed failed ball in a certain frame. Also&#10;added to get_movement_path. It currently just returns a line from the&#10;current center to its center from the previous frame.">
+      <created>1576342748922</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1576342748922</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -499,9 +522,9 @@
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" weight="0.119791664" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32920355" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.20265487" />
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.38053098" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39823008" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39781022" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32920355" />
@@ -544,15 +567,21 @@
     <MESSAGE value="Added FPS tracking. Also added a global copy of each frame so that ball &#10;objects can easily access them for color checking. Added circles and balls&#10;lists to the Table class. Added a find_real_balls method to table to&#10;sort through the circles and decide whether to actually grant them ballship.&#10;created calculate_radius_square method to find the upper left and bottom&#10;right corners of each detected ball so that the color can be averaged easily.&#10;Also started adding to the Ball class. they now automatically take a crop &#10;of the image for color averaging. I haven't yet implemented the actual&#10;averaging operation. Also changed the cv.waitKey from triggering when esc&#10;is pressed to just cv.waitKey(1). I don't know why, but in a test, having&#10;a specific waitkey seemed to lower the frame rate considerably." />
     <MESSAGE value="Added some descriptions for each of the global settings. find_balls now &#10;appends the circles found in each frame to the Table.circlehistory list,&#10;and deletes the oldest item, keeping the list ballframebuffer frames long.&#10;also made it so that get_ball_color is passed the balls number in the &#10;list, so that a seperate debug image can be output for each ball." />
     <MESSAGE value="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic." />
-    <option name="LAST_COMMIT_MESSAGE" value="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic." />
+    <MESSAGE value="Renamed the Ball class to Circle, so that I can have a subclass Ball &#10;that is only for graduated circles. Added a distance threshold for the &#10;circles find_last_position method that returns None for lastpos and dist&#10;if the distance is too high. This is to make it easy while iterating to&#10;know where HoughCircles missed failed ball in a certain frame. Also&#10;added to get_movement_path. It currently just returns a line from the&#10;current center to its center from the previous frame." />
+    <option name="LAST_COMMIT_MESSAGE" value="Renamed the Ball class to Circle, so that I can have a subclass Ball &#10;that is only for graduated circles. Added a distance threshold for the &#10;circles find_last_position method that returns None for lastpos and dist&#10;if the distance is too high. This is to make it easy while iterating to&#10;know where HoughCircles missed failed ball in a certain frame. Also&#10;added to get_movement_path. It currently just returns a line from the&#10;current center to its center from the previous frame." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Main.py</url>
+          <line>810</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/debug_images/old/5_rightlines.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/debug_images/old/5_toplines.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/debug_images/old/6_rightlines_avg.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -572,16 +601,16 @@
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/debug_images/3_1st_pass_clean.png" />
-    <entry file="file://$PROJECT_DIR$/debug_images/2_canny_check_lines.png">
+    <entry file="file://$PROJECT_DIR$/debug_images/old/2_canny_check_lines.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_images/7_grouped.png">
+    <entry file="file://$PROJECT_DIR$/debug_images/old/7_grouped.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/depr/Main_12.9.2019.21.00.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_images/1_canny_check.png">
+    <entry file="file://$PROJECT_DIR$/debug_images/old/1_canny_check.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/debug_images/8_final_lines.png" />
@@ -676,7 +705,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_images/10_ball_area_crop.png">
+    <entry file="file://$PROJECT_DIR$/debug_images/old/10_ball_area_crop.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/process_steps">
@@ -887,18 +916,23 @@
     <entry file="file://$PROJECT_DIR$/debug_images/15_cropped_ball.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_images/10_adaptive_thresh.png">
+    <entry file="file://$PROJECT_DIR$/debug_images/old/10_adaptive_thresh.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Main_12.12.2019.13:15.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_images/old/16_ungrouped_circles.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="714" column="76" selection-start-line="714" selection-start-column="76" selection-end-line="715" selection-end-column="69" />
+        <state relative-caret-position="108">
+          <caret line="791" column="23" selection-start-line="791" selection-start-column="23" selection-end-line="791" selection-end-column="23" />
           <folding>
             <element signature="e#310#422#0" />
             <element signature="e#481#591#0" />
             <element signature="e#311#409#0" />
-            <element signature="e#519#1232#0" />
             <element signature="e#1274#6178#0" />
             <element signature="e#1326#1387#0" />
             <element signature="e#1629#2952#0" />
@@ -1014,19 +1048,16 @@
             <element signature="e#27442#27659#0" />
             <element signature="e#27698#27763#0" />
             <element signature="e#28671#28750#0" />
+            <element signature="e#29874#29918#0" />
             <element signature="e#28174#28402#0" />
-            <element signature="e#28429#28503#0" />
+            <element signature="e#32054#32284#0" />
             <element signature="e#29086#29314#0" />
-            <element signature="e#29594#30005#0" />
+            <element signature="e#34258#34273#0" />
             <element signature="e#28996#29108#0" />
             <element signature="e#29156#29312#0" />
-            <element signature="e#29353#29439#0" />
             <element signature="e#29505#29828#0" />
-            <element signature="e#30217#30634#0" />
-            <element signature="e#29897#30277#0" />
             <element signature="e#30102#30165#0" />
-            <element signature="e#30487#30573#0" />
-            <marker date="1576265536180" expanded="false" signature="35353:35354" ph="..." />
+            <marker date="1576362836798" expanded="false" signature="41277:41278" ph="..." />
           </folding>
         </state>
       </provider>
