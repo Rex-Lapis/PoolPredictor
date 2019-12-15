@@ -26,8 +26,10 @@ framenum = 0
 
 
 # TODO: Use table color to determine whether a bumper line is misplaced. could also just use ratio
-
 # TODO: Try analyzing ratio of h & w of table
+# TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
+# TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to /
+#  see if it's just a shadow
 
 
 class Table:
@@ -787,33 +789,36 @@ class Table:
     def find_ball_groups(self):
         history = self.circlehistory
         groups = self.grouped_circles
-        distthresh = 80
+        distthresh = 50
         distthresh2 = 300
         colorthresh = 80
         tablecolorthresh = 150
+        print(framenum)
         if len(history) > 0:
             circles = self.circles
+
+            # At the start of the program, start a new group
             if len(groups) == 0:
-                print(len(history))
                 oldcircles = history[-1]
                 for circ in circles:
                     circs_w_dists = self.dist_list(circ, oldcircles)
                     if circs_w_dists[0][1] < distthresh:
                         closest = circs_w_dists[0][0]
-                        group = [closest, circ]
-                        self.grouped_circles.append(group)
+                        newball = Ball(circ)
+                        newball.append(closest)
+                        newball.append(circ)
+                        self.grouped_circles.append(newball)
 
+            # Once there's a place to start for the group comparisons:
             else:
-                # print(groups)
                 oldcircles = [i[-1] for i in groups]
-                # print(oldcircles)
                 ungrouped = []
                 for circ in circles:
                     grouped = False
                     circs_w_dists = self.dist_list(circ, oldcircles)
                     closest = circs_w_dists[0][0]
                     distfrom = circs_w_dists[0][1]
-                    colordiff = self.compare_ball_color(circ, closest)
+                    colordiff = circ.compare_color(closest)
                     tablediff = color_difference(circ.color, table_color_bgr)
                     if tablediff < tablecolorthresh:
                         print(str(framenum), 'too close to table color')
@@ -847,12 +852,6 @@ class Table:
                 cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
                 cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
-    def compare_ball_color(self, circ1, circ2):
-        col1 = circ1.color
-        col2 = circ2.color
-        diff = color_difference(col1, col2)
-        return diff
-
     def calculate_radius_square(self, radius, center):
         x1, y1 = center[0], center[1]
         r = radius
@@ -866,17 +865,13 @@ class Table:
     def dist_list(circ, oldcircles):
         circs_w_dists = []
         for ocirc in oldcircles:
-            dist = get_dist(circ.center, ocirc.center)
+            center1 = circ.center
+            dist = get_dist(center1, ocirc.center)
             circs_w_dists.append((ocirc, dist))
         circs_w_dists.sort(key=lambda x: x[1])
         return circs_w_dists
 
 
-# TODO: Sample the color in each ball and weigh it against the table color
-# TODO: Check the avg color of each ball against each-other to confirm that they are the same
-# TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
-# TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to /
-#  see if it's just a shadow
 class Circle:
     def __init__(self, center, radius):
         self.movementthresh = 10
@@ -886,9 +881,6 @@ class Circle:
         self.color = self.get_ball_color()
 
     def __repr__(self):
-        return str(self.center)
-
-    def __str__(self):
         return str(self.center)
 
     def calculate_radius_square(self):
@@ -914,101 +906,44 @@ class Circle:
         # print(avg)
         return avg
 
-
-# class Circle:
-#     def __init__(self, center, radius, numinlist, history):
-#         # TODO: Make location history list, rather than a single last location
-#         # TODO: When a ball is missed for a single frame and reappears, the program thinks it came from the nearest ball
-#         # TODO: Next, have it find the positional history and draw the lines based on that.
-#         self.movementthresh = 10
-#         self.center = center
-#         self.radius = radius
-#         if len(history) > 0:
-#             self.lastpos, self.lastdist = self.findlastposition(history[-1])
-#         else:
-#             self.lastpos = None
-#         # self.loc_history = []
-#         # self.dist_history = []
-#         # while
-#         # for i in range(len(history)):
-#         #     if i == 0:
-#         #
-#         self.legitscore = 0
-#         self.coloravg = self.get_ball_color(numinlist)
-#         self.line = None
-#         self.inpocket = False
-#         if self.lastpos is not None and len(self.lastpos) > 0:
-#             if self.is_moving():
-#                 self.line = self.get_movement_path()
-#
-#     def calculate_radius_square(self):
-#         x1, y1 = self.center[0], self.center[1]
-#         r = self.radius
-#         sqr_length = (r ** 2) / 2
-#         dist = sqrt(sqr_length)
-#         tl = (int(x1 - dist), int(y1 - dist))
-#         br = (int(x1 + dist), int(y1 + dist))
-#         return tl, br
-#
-#     def get_ball_color(self, number):
-#         tl, br = self.calculate_radius_square()
-#         x1, y1 = tl[0], tl[1]
-#         x2, y2 = br[0], br[1]
-#         cropped = cur_frame[y1: y2, x1: x2]
-#         cv.imwrite('./debug_images/ball_crop/15_cropped_ball_' + str(number) + '.png', cropped)
-#
-#         avg_b = np.mean(cropped[:, :, 0])
-#         avg_g = np.mean(cropped[:, :, 1])
-#         avg_r = np.mean(cropped[:, :, 2])
-#         avg = (avg_b, avg_g, avg_r)
-#         # print(avg)
-#         return avg
-#
-#     def findlastposition(self, prevframeballs, dist_thresh=60):
-#         center = self.center
-#         r = self.radius
-#         lastpos = []
-#         for ball in prevframeballs:  # This is how it was. Still works. Just keeping as backup
-#             center2 = ball.center
-#             dist = get_dist(center, center2)
-#
-#             lastpos.append((center2, dist))
-#         previous = None
-#         if len(lastpos) > 0:
-#             lastpos.sort(key=lambda x: x[1])
-#             pos = lastpos[0][0]
-#             dist = lastpos[0][1]
-#             if dist < dist_thresh:
-#                 return pos, dist
-#             else:
-#                 return None, None
-#         else:
-#             return [], None
-#
-#     def is_moving(self):
-#         if self.lastdist > self.movementthresh:
-#             return True
-#         else:
-#             return False
-#
-#     def get_movement_path(self):
-#         playbox = table.playbox
-#         leftx = playbox[0][0]
-#         uppery = playbox[0][1]
-#         rightx = playbox[1][0]
-#         lowery = playbox[1][1]
-#         x1, y1 = self.center[0], self.center[1]
-#         x2, y2 = self.lastpos[0], self.lastpos[1]
-#         dist, x, y = get_dist(self.center, self.lastpos, seperate=True) # , absolute=False)
-#
-#         slope = y / x
-#         return [(x1, y1), (x2, y2)]
-#     # TODO: I am currently trying to figure out how to draw a line in the direction of motion for each ball
+    def compare_color(self, circ2):
+        col1 = self.color
+        col2 = circ2.color
+        diff = color_difference(col1, col2)
+        return diff
 
 
 class Ball(Circle):
-    def __init__(self):
-        pass
+    def __init__(self, circle):
+        self.past = []
+        super().__init__(circle.center, circle.radius)
+
+    # def __repr__(self):
+    #     return str(self.past)
+
+    def __str__(self):
+        return str(self.past)
+
+    def __iter__(self):
+        return iter(self.past)
+
+    def __getitem__(self, i):
+        return self.past[i]
+
+    def __setitem__(self, i, value):
+        self.past[i] = value
+
+    def __delitem__(self, i):
+        del self.past[i]
+
+    def __len__(self):
+        return len(self.past)
+
+    def __index__(self, i):
+        return self.past[i]
+
+    def append(self, item):
+        self.past.append(item)
 
 
 def get_dist(pt1, pt2, seperate=False, absolute=True):
