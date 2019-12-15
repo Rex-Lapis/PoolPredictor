@@ -412,20 +412,6 @@ class Table:
             print('no circles to draw')
         return frame
 
-    @staticmethod
-    def get_ball_size(self, circles):
-        radiuslist = []
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for circle in circles[0, :]:
-                x, y = circle[0], circle[1]
-                radius = circle[2]
-                radiuslist.append(radius)
-                # if draw:
-                #     cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
-                #     cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
-            print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)), 'avg:', str(sum(radiuslist) / len(radiuslist)))
-
     def set_boxes(self, goodpoints):
         playfield_points = goodpoints[0]
         pocket_points = goodpoints[1]
@@ -606,84 +592,6 @@ class Table:
         good_points = find_good_points(points_w_dists)
         return good_points
 
-    @staticmethod
-    def max_mid_min(group, axis='x'):
-        if axis == 'x':
-            xory = 0
-        elif axis == 'y':
-            xory = 1
-        group2 = list(group)
-        maxind = group.argmax(axis=0)[xory]
-        maximum = list(group2[maxind])
-        group2.pop(maxind)
-        group2 = np.asarray(group2)
-        minind = group2.argmin(axis=0)[xory]
-        minimum = list(group2[minind])
-        group2 = list(group2)
-        group2.pop(minind)
-        midimum = list(group2[0])
-        return maximum, midimum, minimum
-
-    @staticmethod
-    def find_line_intersection(line1, line2):
-        x1, y1, x2, y2 = line1[0], line1[1], line1[2], line1[3]
-        sx1, sy1, sx2, sy2 = line2[0], line2[1], line2[2], line2[3]
-        line1 = ((x1, y1), (x2, y2))
-        line2 = ((sx1, sy1), (sx2, sy2))
-        xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
-        ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
-
-        def det(a, b):
-            return a[0] * b[1] - a[1] * b[0]
-
-        div = det(xdiff, ydiff)
-
-        if div != 0:
-            d = (det(*line1), det(*line2))
-            x = int(det(d, xdiff) / div)
-            y = int(det(d, ydiff) / div)
-            pt = (x, y)
-            return pt
-
-    @staticmethod
-    def find_average_lines_from_groups(groups, axis='x'):
-        output = []
-        for group in groups:
-            group = np.asarray(group)
-            if axis == 'x':
-                avgx = int(np.mean(group[:, 0]))
-                newline = [avgx, 0, avgx, shape[0]]
-            elif axis == 'y':
-                avgy = int(np.mean(group[:, 1]))
-                newline = [0, avgy, shape[1], avgy]
-            output.append(newline)
-        return output
-
-    @staticmethod
-    def remove_list_of_indexes(inlist, killlist):
-        lencount = 0
-        for i in range(len(killlist)):
-            ind = killlist[i] - lencount
-            lencount += 1
-            del inlist[ind]
-        return inlist
-
-    @staticmethod
-    def get_dist(pt1, pt2, seperate=False):
-        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
-        xdist = abs(x1 - x2)
-        ydist = abs(y1 - y2)
-        if xdist == 0:
-            dist = ydist
-        elif ydist == 0:
-            dist = xdist
-        else:
-            dist = sqrt((xdist ** 2) + (ydist ** 2))
-        if seperate is True:
-            return dist, xdist, ydist
-        else:
-            return dist
-
     def check_quadrant(self, point):
         midx = self.frame.shape[1] // 2
         midy = self.frame.shape[0] // 2
@@ -765,6 +673,7 @@ class Table:
             self.get_ball_size(circles)
 
         self.add_circles_to_log(circles)
+        self.average_motionblur_circles()
         self.find_ball_groups()
         return frame
 
@@ -789,16 +698,17 @@ class Table:
     def find_ball_groups(self):
         history = self.circlehistory
         groups = self.grouped_circles
-        distthresh = 50
+        distthresh = 400
         distthresh2 = 300
-        colorthresh = 80
+        colorthresh = 120
         tablecolorthresh = 150
         print(framenum)
-        if len(history) > 0:
-            circles = self.circles
+        # if len(history) > 0:
+        circles = self.circles
 
-            # At the start of the program, start a new group
-            if len(groups) == 0:
+        # At the start of the program, start a new group
+        if len(groups) == 0:
+            if len(history) > 0:
                 oldcircles = history[-1]
                 for circ in circles:
                     circs_w_dists = self.dist_list(circ, oldcircles)
@@ -809,50 +719,85 @@ class Table:
                         newball.append(circ)
                         self.grouped_circles.append(newball)
 
-            # Once there's a place to start for the group comparisons:
-            else:
-                oldcircles = [i[-1] for i in groups]
-                ungrouped = []
-                for circ in circles:
-                    grouped = False
-                    circs_w_dists = self.dist_list(circ, oldcircles)
-                    closest = circs_w_dists[0][0]
-                    distfrom = circs_w_dists[0][1]
+        # Once there's a place to start for the group comparisons:
+        else:
+            oldcircles = [i[-1] for i in groups]
+            ungrouped = []
+            for circ in circles:
+                grouped = False
+                circs_w_dists = self.dist_list(circ, oldcircles)
+                for j in range(5):
+                    closest = circs_w_dists[j][0]
+                    distfrom = circs_w_dists[j][1]
                     colordiff = circ.compare_color(closest)
                     tablediff = color_difference(circ.color, table_color_bgr)
                     if tablediff < tablecolorthresh:
                         print(str(framenum), 'too close to table color')
-                    elif distfrom < distthresh or distfrom < distthresh2 and colordiff < colorthresh:
-                        for i in range(len(groups)):
-                            if closest in groups[i]:
-                                groups[i].append(circ)
-                                grouped = True
+
+                    elif colordiff < colorthresh:
+                        if distfrom < distthresh: #  or distfrom < distthresh2:
+                            for i in range(len(groups)):
+                                if closest in groups[i]:
+                                    groups[i].append(circ)
+                                    grouped = True
+                                    break
+                                if len(groups[i]) > ballframebuffer:
+                                    del groups[i][0]
+                            if grouped is True:
                                 break
-                            if len(groups[i]) > ballframebuffer:
-                                del groups[i][0]
-                    if not grouped:
-                        print('frame:', framenum)
-                        print(circ, 'not grouped. was looking for', closest)
-                        print('distfrom:', distfrom, 'colordiff:', colordiff)
-                        ungrouped.append(circ)
+                if not grouped:
+                    print('frame:', framenum)
+                    print(circ, 'not grouped. was looking for', closest)
+                    print('distfrom:', distfrom, 'colordiff:', colordiff)
+                    ungrouped.append(circ)
 
-                self.grouped_circles = groups
+            self.grouped_circles = groups
 
-                copy = cur_frame.copy()
+            colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200)]
 
-                colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200)]
+            copy = cur_frame.copy()
+            for i in range(len(groups)):
+                group = groups[i]
+                color = colors[i]
+                for c in group:
+                    cv.circle(copy, c.center, c.radius, color, 3)
+            for c in ungrouped:
+                cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
+            cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
+            cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
-                for i in range(len(groups)):
-                    group = groups[i]
-                    color = colors[i]
-                    for c in group:
-                        cv.circle(copy, c.center, c.radius, color, 3)
-                for c in ungrouped:
-                    cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
-                cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
-                cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
+    def average_motionblur_circles(self, tolerance=2):
+        killlist = []
+        ilist = []
+        for i in range(len(self.circles)):
+            ilist.append(i)
+            circle = self.circles[i]
+            for j in range(len(self.circles)):
+                circle2 = self.circles[j]
+                if j in ilist:
+                    continue
+                else:
+                    dist = get_dist(circle.center, circle2.center)
+                    joined_radius = circle.radius + circle2.radius
+                    if dist < joined_radius - tolerance:
+                        print(framenum, 'double circle found!!')
+                        avgrad = joined_radius / 2
+                        avgpoint = self.halfway_point(circle.center, circle2.center)
+                        newcirc = Circle(avgpoint, int(avgrad))
+                        self.circles[i] = newcirc
+                        killlist.append(j)
+        self.remove_list_of_indexes(self.circles, killlist)
 
-    def calculate_radius_square(self, radius, center):
+    @staticmethod
+    def halfway_point(pt1, pt2):
+        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+        avgx = int((x1 + x2) / 2)
+        avgy = int((y1 + y2) / 2)
+        newpoint = (avgx, avgy)
+        return newpoint
+
+    @staticmethod
+    def calculate_radius_square(radius, center):
         x1, y1 = center[0], center[1]
         r = radius
         sqr_length = (r ** 2) / 2
@@ -860,6 +805,20 @@ class Table:
         tl = (int(x1 - dist), int(y1 - dist))
         br = (int(x1 + dist), int(y1 + dist))
         return tl, br
+
+    @staticmethod
+    def get_ball_size(circles):
+        radiuslist = []
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                x, y = circle[0], circle[1]
+                radius = circle[2]
+                radiuslist.append(radius)
+                # if draw:
+                #     cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
+                #     cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
+            print('circle radius max:', str(max(radiuslist)), 'min:', str(min(radiuslist)), 'avg:', str(sum(radiuslist) / len(radiuslist)))
 
     @staticmethod
     def dist_list(circ, oldcircles):
@@ -870,6 +829,84 @@ class Table:
             circs_w_dists.append((ocirc, dist))
         circs_w_dists.sort(key=lambda x: x[1])
         return circs_w_dists
+
+    @staticmethod
+    def max_mid_min(group, axis='x'):
+        if axis == 'x':
+            xory = 0
+        elif axis == 'y':
+            xory = 1
+        group2 = list(group)
+        maxind = group.argmax(axis=0)[xory]
+        maximum = list(group2[maxind])
+        group2.pop(maxind)
+        group2 = np.asarray(group2)
+        minind = group2.argmin(axis=0)[xory]
+        minimum = list(group2[minind])
+        group2 = list(group2)
+        group2.pop(minind)
+        midimum = list(group2[0])
+        return maximum, midimum, minimum
+
+    @staticmethod
+    def find_line_intersection(line1, line2):
+        x1, y1, x2, y2 = line1[0], line1[1], line1[2], line1[3]
+        sx1, sy1, sx2, sy2 = line2[0], line2[1], line2[2], line2[3]
+        line1 = ((x1, y1), (x2, y2))
+        line2 = ((sx1, sy1), (sx2, sy2))
+        xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+        ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+
+        def det(a, b):
+            return a[0] * b[1] - a[1] * b[0]
+
+        div = det(xdiff, ydiff)
+
+        if div != 0:
+            d = (det(*line1), det(*line2))
+            x = int(det(d, xdiff) / div)
+            y = int(det(d, ydiff) / div)
+            pt = (x, y)
+            return pt
+
+    @staticmethod
+    def find_average_lines_from_groups(groups, axis='x'):
+        output = []
+        for group in groups:
+            group = np.asarray(group)
+            if axis == 'x':
+                avgx = int(np.mean(group[:, 0]))
+                newline = [avgx, 0, avgx, shape[0]]
+            elif axis == 'y':
+                avgy = int(np.mean(group[:, 1]))
+                newline = [0, avgy, shape[1], avgy]
+            output.append(newline)
+        return output
+
+    @staticmethod
+    def remove_list_of_indexes(inlist, killlist):
+        lencount = 0
+        for i in range(len(killlist)):
+            ind = killlist[i] - lencount
+            lencount += 1
+            del inlist[ind]
+        return inlist
+
+    @staticmethod
+    def get_dist(pt1, pt2, seperate=False):
+        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+        xdist = abs(x1 - x2)
+        ydist = abs(y1 - y2)
+        if xdist == 0:
+            dist = ydist
+        elif ydist == 0:
+            dist = xdist
+        else:
+            dist = sqrt((xdist ** 2) + (ydist ** 2))
+        if seperate is True:
+            return dist, xdist, ydist
+        else:
+            return dist
 
 
 class Circle:

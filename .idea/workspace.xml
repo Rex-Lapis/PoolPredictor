@@ -19,12 +19,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="461">
-              <caret line="871" column="28" selection-start-line="871" selection-start-column="28" selection-end-line="871" selection-end-column="28" />
+            <state relative-caret-position="300">
+              <caret line="735" column="24" selection-start-line="735" selection-start-column="24" selection-end-line="735" selection-end-column="24" />
               <folding>
                 <element signature="e#359#470#0" />
                 <element signature="e#529#638#0" />
-                <element signature="e#1060#34353#0" />
                 <element signature="e#1103#1918#0" />
                 <element signature="e#1960#6864#0" />
                 <element signature="e#2012#2073#0" />
@@ -89,10 +88,6 @@
                 <element signature="e#15126#15719#0" />
                 <element signature="e#15226#15644#0" />
                 <element signature="e#15317#15644#0" />
-                <element signature="e#15785#16350#0" />
-                <element signature="e#15845#16350#0" />
-                <element signature="e#15942#16210#0" />
-                <element signature="e#16063#16073#0" />
                 <element signature="e#16397#17693#0" />
                 <element signature="e#16553#16691#0" />
                 <element signature="e#16945#17083#0" />
@@ -125,19 +120,7 @@
                 <element signature="e#23739#23917#0" />
                 <element signature="e#23961#24067#0" />
                 <element signature="e#24111#24217#0" />
-                <element signature="e#24518#24992#0" />
-                <element signature="e#25066#25704#0" />
-                <element signature="e#25446#25478#0" />
-                <element signature="e#25546#25704#0" />
-                <element signature="e#25790#26185#0" />
-                <element signature="e#25843#26163#0" />
-                <element signature="e#25913#25997#0" />
-                <element signature="e#26044#26128#0" />
-                <element signature="e#26263#26431#0" />
-                <element signature="e#26327#26409#0" />
-                <element signature="e#26503#26878#0" />
                 <element signature="e#26925#27246#0" />
-                <element signature="e#27336#29578#0" />
                 <element signature="e#27940#28015#0" />
                 <element signature="e#28124#28315#0" />
                 <element signature="e#28356#28573#0" />
@@ -147,21 +130,17 @@
                 <element signature="e#29669#29738#0" />
                 <element signature="e#29884#30288#0" />
                 <element signature="e#30010#30054#0" />
-                <element signature="e#30330#33621#0" />
-                <element signature="e#30568#33621#0" />
-                <element signature="e#30792#31318#0" />
-                <element signature="e#30910#31318#0" />
-                <element signature="e#31040#31318#0" />
-                <element signature="e#31375#33538#0" />
-                <element signature="e#31583#32823#0" />
-                <element signature="e#32200#32535#0" />
-                <element signature="e#32257#32535#0" />
-                <element signature="e#32314#32421#0" />
-                <element signature="e#32596#32823#0" />
-                <element signature="e#33134#33295#0" />
+                <element signature="e#27892#28409#0" />
                 <element signature="e#33686#33914#0" />
+                <element signature="e#30934#31499#0" />
+                <element signature="e#31212#31222#0" />
                 <element signature="e#33729#33989#0" />
                 <element signature="e#34119#34277#0" />
+                <element signature="e#31890#32364#0" />
+                <element signature="e#32438#33076#0" />
+                <element signature="e#33162#33557#0" />
+                <element signature="e#33635#33803#0" />
+                <element signature="e#33875#34250#0" />
                 <element signature="e#34805#35982#0" />
                 <element signature="e#34849#35002#0" />
                 <element signature="e#35036#35059#0" />
@@ -191,7 +170,7 @@
                 <element signature="e#41679#41742#0" />
                 <element signature="e#41904#42377#0" />
                 <element signature="e#42087#42194#0" />
-                <marker date="1576432222800" expanded="false" signature="38425:38426" ph="..." />
+                <marker date="1576439547376" expanded="false" signature="39820:39821" ph="..." />
               </folding>
             </state>
           </provider>
@@ -266,7 +245,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>playfield</find>
       <find>ratio</find>
       <find>intersect</find>
       <find>self.tablelines</find>
@@ -290,12 +268,13 @@
       <find>is_sam</find>
       <find>color</find>
       <find>table</find>
-      <find>115</find>
       <find>diff</find>
       <find>append</find>
       <find>groups.append</find>
       <find>groups.app</find>
       <find>self.circles</find>
+      <find>Double</find>
+      <find>115</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -555,7 +534,14 @@
       <option name="project" value="LOCAL" />
       <updated>1576365272052</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Created the Ball subclass of Circle. So far, the only thing that's&#10;new from the circle is a .past attribute, which is a list of Circle&#10;objects that were deemed within the Table's find_ball_groups method to &#10;be the same ball from past frames. The find_ball_groups method works&#10;about the same as it did in the last commit, except it has been adapted&#10;so that, rather than just using a list of lists of past locations for &#10;each ball stored directly as a table attribute, the table's list is now&#10;full of ball objects. I added a whole bunch of magic to the Ball class,&#10;so that they can be indexed and appended all the same, so very little&#10;change was needed within the find_ball_groups method. I decided to&#10;switch to Ball objects so that I could more easily compare color and&#10;collisions with methods within the Ball class. Have not implemented any&#10;yet.">
+      <created>1576432990527</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1576432990527</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -576,7 +562,7 @@
       <window_info id="Favorites" order="2" side_tool="true" weight="0.119791664" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.20176992" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.22300886" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.22300886" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39734513" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -622,7 +608,8 @@
     <MESSAGE value="Started appending circles and  balls to table's circlehistory and ballhistory&#10;lists. Added the findlastposition method to the Ball class, which takes&#10;the ballhistory list and finds the ball with the smallest difference in &#10;distance. It then updates its lastpos and lastdist with the previous position,&#10;and the distance between the two points respectively. Added is_moving method&#10;which looks at the two points (current and past) and returns True if the&#10;distance is greater than the movementthresh. Started the get_movement_direction&#10;method which identifies the slope, and will then decide where to draw the &#10;motion line. Also made a global version of get_dist, and added the ability&#10;to specify whether you want the absolute value distance, or the relative,&#10;with the first point being the most recent, and the second being the historic." />
     <MESSAGE value="Renamed the Ball class to Circle, so that I can have a subclass Ball &#10;that is only for graduated circles. Added a distance threshold for the &#10;circles find_last_position method that returns None for lastpos and dist&#10;if the distance is too high. This is to make it easy while iterating to&#10;know where HoughCircles missed failed ball in a certain frame. Also&#10;added to get_movement_path. It currently just returns a line from the&#10;current center to its center from the previous frame." />
     <MESSAGE value="Completely revised the distance detection structure. I removed all &#10;methods from the Circle class except for those used to grab the color&#10;within that circle, and I moved the ball-continuity process into the&#10;Table.find_ball_groups method. I added a global frame number variable &#10;that I use for debugging. Basically, every frame, the new set of circles&#10;found is weighed against those in the last frame. Circles that seem to&#10;be contiguous are put into a group with their selves from past frames&#10;and added to Table.grouped_circles. I also added a color checking in &#10;addition to distance checking to help make sure the balls are the same.&#10;The major additions all happened within find_ball_groups. I added a&#10;frames folder to debug_images, and it is currently set up to draw the&#10;circles found in each group over every frame. Each group is drawn with &#10;a different color for better debugging." />
-    <option name="LAST_COMMIT_MESSAGE" value="Completely revised the distance detection structure. I removed all &#10;methods from the Circle class except for those used to grab the color&#10;within that circle, and I moved the ball-continuity process into the&#10;Table.find_ball_groups method. I added a global frame number variable &#10;that I use for debugging. Basically, every frame, the new set of circles&#10;found is weighed against those in the last frame. Circles that seem to&#10;be contiguous are put into a group with their selves from past frames&#10;and added to Table.grouped_circles. I also added a color checking in &#10;addition to distance checking to help make sure the balls are the same.&#10;The major additions all happened within find_ball_groups. I added a&#10;frames folder to debug_images, and it is currently set up to draw the&#10;circles found in each group over every frame. Each group is drawn with &#10;a different color for better debugging." />
+    <MESSAGE value="Created the Ball subclass of Circle. So far, the only thing that's&#10;new from the circle is a .past attribute, which is a list of Circle&#10;objects that were deemed within the Table's find_ball_groups method to &#10;be the same ball from past frames. The find_ball_groups method works&#10;about the same as it did in the last commit, except it has been adapted&#10;so that, rather than just using a list of lists of past locations for &#10;each ball stored directly as a table attribute, the table's list is now&#10;full of ball objects. I added a whole bunch of magic to the Ball class,&#10;so that they can be indexed and appended all the same, so very little&#10;change was needed within the find_ball_groups method. I decided to&#10;switch to Ball objects so that I could more easily compare color and&#10;collisions with methods within the Ball class. Have not implemented any&#10;yet." />
+    <option name="LAST_COMMIT_MESSAGE" value="Created the Ball subclass of Circle. So far, the only thing that's&#10;new from the circle is a .past attribute, which is a list of Circle&#10;objects that were deemed within the Table's find_ball_groups method to &#10;be the same ball from past frames. The find_ball_groups method works&#10;about the same as it did in the last commit, except it has been adapted&#10;so that, rather than just using a list of lists of past locations for &#10;each ball stored directly as a table attribute, the table's list is now&#10;full of ball objects. I added a whole bunch of magic to the Ball class,&#10;so that they can be indexed and appended all the same, so very little&#10;change was needed within the find_ball_groups method. I decided to&#10;switch to Ball objects so that I could more easily compare color and&#10;collisions with methods within the Ball class. Have not implemented any&#10;yet." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -941,12 +928,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="461">
-          <caret line="871" column="28" selection-start-line="871" selection-start-column="28" selection-end-line="871" selection-end-column="28" />
+        <state relative-caret-position="300">
+          <caret line="735" column="24" selection-start-line="735" selection-start-column="24" selection-end-line="735" selection-end-column="24" />
           <folding>
             <element signature="e#359#470#0" />
             <element signature="e#529#638#0" />
-            <element signature="e#1060#34353#0" />
             <element signature="e#1103#1918#0" />
             <element signature="e#1960#6864#0" />
             <element signature="e#2012#2073#0" />
@@ -1011,10 +997,6 @@
             <element signature="e#15126#15719#0" />
             <element signature="e#15226#15644#0" />
             <element signature="e#15317#15644#0" />
-            <element signature="e#15785#16350#0" />
-            <element signature="e#15845#16350#0" />
-            <element signature="e#15942#16210#0" />
-            <element signature="e#16063#16073#0" />
             <element signature="e#16397#17693#0" />
             <element signature="e#16553#16691#0" />
             <element signature="e#16945#17083#0" />
@@ -1047,19 +1029,7 @@
             <element signature="e#23739#23917#0" />
             <element signature="e#23961#24067#0" />
             <element signature="e#24111#24217#0" />
-            <element signature="e#24518#24992#0" />
-            <element signature="e#25066#25704#0" />
-            <element signature="e#25446#25478#0" />
-            <element signature="e#25546#25704#0" />
-            <element signature="e#25790#26185#0" />
-            <element signature="e#25843#26163#0" />
-            <element signature="e#25913#25997#0" />
-            <element signature="e#26044#26128#0" />
-            <element signature="e#26263#26431#0" />
-            <element signature="e#26327#26409#0" />
-            <element signature="e#26503#26878#0" />
             <element signature="e#26925#27246#0" />
-            <element signature="e#27336#29578#0" />
             <element signature="e#27940#28015#0" />
             <element signature="e#28124#28315#0" />
             <element signature="e#28356#28573#0" />
@@ -1069,21 +1039,17 @@
             <element signature="e#29669#29738#0" />
             <element signature="e#29884#30288#0" />
             <element signature="e#30010#30054#0" />
-            <element signature="e#30330#33621#0" />
-            <element signature="e#30568#33621#0" />
-            <element signature="e#30792#31318#0" />
-            <element signature="e#30910#31318#0" />
-            <element signature="e#31040#31318#0" />
-            <element signature="e#31375#33538#0" />
-            <element signature="e#31583#32823#0" />
-            <element signature="e#32200#32535#0" />
-            <element signature="e#32257#32535#0" />
-            <element signature="e#32314#32421#0" />
-            <element signature="e#32596#32823#0" />
-            <element signature="e#33134#33295#0" />
+            <element signature="e#27892#28409#0" />
             <element signature="e#33686#33914#0" />
+            <element signature="e#30934#31499#0" />
+            <element signature="e#31212#31222#0" />
             <element signature="e#33729#33989#0" />
             <element signature="e#34119#34277#0" />
+            <element signature="e#31890#32364#0" />
+            <element signature="e#32438#33076#0" />
+            <element signature="e#33162#33557#0" />
+            <element signature="e#33635#33803#0" />
+            <element signature="e#33875#34250#0" />
             <element signature="e#34805#35982#0" />
             <element signature="e#34849#35002#0" />
             <element signature="e#35036#35059#0" />
@@ -1113,7 +1079,7 @@
             <element signature="e#41679#41742#0" />
             <element signature="e#41904#42377#0" />
             <element signature="e#42087#42194#0" />
-            <marker date="1576432222800" expanded="false" signature="38425:38426" ph="..." />
+            <marker date="1576439547376" expanded="false" signature="39820:39821" ph="..." />
           </folding>
         </state>
       </provider>
