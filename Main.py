@@ -2,8 +2,16 @@ from imutils.video import FPS
 import cv2 as cv
 import numpy as np
 from math import sqrt
+import cProfile
+import pyglview
+
+viewer = pyglview.Viewer()
+
+debug = False
 
 cv2 = cv
+pr = cProfile.Profile()
+pr.enable()
 
 cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip7.mp4')
 fps = FPS().start()
@@ -58,7 +66,8 @@ class Table:
         self.goodpoints = self.check_all_intersections()
         self.set_boxes(self.goodpoints)
         check = self.drawlines(color=(0, 200, 255))
-        cv.imwrite('./debug_images/10_final_lines.png', check)
+        if debug:
+            cv.imwrite('./debug_images/10_final_lines.png', check)
         print('Table Initialized!')
 
     def find_table_lines(self):
@@ -108,16 +117,11 @@ class Table:
                 print('setting value not yet set')
                 raise ValueError
 
-            cv.imwrite('./debug_images/1_canny_check.png', canny)
-
             lines = cv2.HoughLinesP(canny, rho, np.pi / 180, 300, minLineLength=minlinelength, maxLineGap=maxlinegap)  # thresh was 300
             if lines is not None:
                 for i in range(len(lines)):
                     self.linelist.append(lines[i][0])
             count += 1
-
-        cannywlines = self.drawlines(canny)
-        cv.imwrite('./debug_images/2_canny_check_lines.png', cannywlines)
 
         print(len(self.linelist), 'lines found')
         poplist = []
@@ -134,8 +138,13 @@ class Table:
         self.remove_list_of_indexes(self.linelist, poplist)
         print(len(poplist), 'lines removed')
 
-        clean1 = self.drawlines(self.frame.copy(), color=(0, 0, 255))
-        cv.imwrite('./debug_images/3_slope_filter.png', clean1)
+        if debug:
+            cv.imwrite('./debug_images/1_canny_check.png', canny)
+            cannywlines = self.drawlines(canny)
+            cv.imwrite('./debug_images/2_canny_check_lines.png', cannywlines)
+
+            clean1 = self.drawlines(self.frame.copy(), color=(0, 0, 255))
+            cv.imwrite('./debug_images/3_slope_filter.png', clean1)
 
         print('Sorting lines by direction...')
 
@@ -166,9 +175,11 @@ class Table:
                 rightlines.append(line)
 
         horiz = self.drawlines(frame.copy(), linelist=horizontal, color=(0, 0, 255))
-        cv.imwrite('./debug_images/4_horizontal_split.png', horiz)
         vert = self.drawlines(frame.copy(), linelist=vertical, color=(0, 0, 255))
-        cv.imwrite('./debug_images/4_vertical_split.png', vert)
+
+        if debug:
+            cv.imwrite('./debug_images/4_horizontal_split.png', horiz)
+            cv.imwrite('./debug_images/4_vertical_split.png', vert)
 
         self.linelist = {'top': toplines, 'bottom': bottomlines, 'left': leftlines, 'right': rightlines}
         print('Grouping lines by proximity and replacing them with an averaged line...')
@@ -176,19 +187,21 @@ class Table:
         for key in self.linelist:
             lines = self.linelist[key]
             grouped = self.group_lines_by_proximity(lines)
-            checkimg = self.drawlines(frame.copy(), linelist=grouped, color=(0, 0, 255))
-            cv.imwrite('./debug_images/5_' + key + 'lines.png', checkimg)
+
             if key == 'top' or key == 'bottom':
                 axis = 'y'
             else:
                 axis = 'x'
             averaged = self.find_average_lines_from_groups(grouped, axis)
-            checkimg = self.drawlines(frame.copy(), linelist=averaged, color=(0, 0, 255))
-            cv.imwrite('./debug_images/6_averaged_' + key + 'lines.png', checkimg)
             self.linelist[key] = averaged
 
-        copy2 = self.drawlines(frame.copy(), color=(0, 0, 255))
-        cv.imwrite('./debug_images/7_grouped.png', copy2)
+        if debug:
+            checkimg = self.drawlines(frame.copy(), linelist=grouped, color=(0, 0, 255))
+            cv.imwrite('./debug_images/5_' + key + 'lines.png', checkimg)
+            checkimg = self.drawlines(frame.copy(), linelist=averaged, color=(0, 0, 255))
+            cv.imwrite('./debug_images/6_averaged_' + key + 'lines.png', checkimg)
+            copy2 = self.drawlines(frame.copy(), color=(0, 0, 255))
+            cv.imwrite('./debug_images/7_grouped.png', copy2)
 
         print('Lines Found')
         return frame
@@ -423,9 +436,6 @@ class Table:
             elif quad == 'br':
                 br = pt
         self.playbox = [ul, br]
-        copy = self.frame.copy()
-        cv.rectangle(copy, self.playbox[0], self.playbox[1], (0, 200, 255), 2)
-        cv.imwrite('./debug_images/8_playbox_check.png', copy)
 
         for pt in pocket_points:
             quad = self.check_quadrant(pt)
@@ -434,9 +444,6 @@ class Table:
             elif quad == 'br':
                 br = pt
         self.pocketbox = [ul, br]
-        copy = self.frame.copy()
-        cv.rectangle(copy, self.pocketbox[0], self.pocketbox[1], (0, 200, 255), 2)
-        cv.imwrite('./debug_images/8_pocketbox_check.png', copy)
 
         for pt in table_points:
             quad = self.check_quadrant(pt)
@@ -445,9 +452,16 @@ class Table:
             elif quad == 'br':
                 br = pt
         self.tablebox = [ul, br]
-        copy = self.frame.copy()
-        cv.rectangle(copy, self.tablebox[0], self.tablebox[1], (0, 200, 255), 2)
-        cv.imwrite('./debug_images/8_tablebox_check.png', copy)
+        if debug:
+            copy = self.frame.copy()
+            cv.rectangle(copy, self.playbox[0], self.playbox[1], (0, 200, 255), 2)
+            cv.imwrite('./debug_images/8_playbox_check.png', copy)
+            copy = self.frame.copy()
+            cv.rectangle(copy, self.pocketbox[0], self.pocketbox[1], (0, 200, 255), 2)
+            cv.imwrite('./debug_images/8_pocketbox_check.png', copy)
+            copy = self.frame.copy()
+            cv.rectangle(copy, self.tablebox[0], self.tablebox[1], (0, 200, 255), 2)
+            cv.imwrite('./debug_images/8_tablebox_check.png', copy)
 
     def find_all_intersections(self, lines=None):
         print('Finding all intersections...')
@@ -551,7 +565,8 @@ class Table:
                                     killlist.append(ind)                                            # Add that index to the killlist
                     quadrants[key] = self.remove_list_of_indexes(quadrants[key], killlist)   # remove all indexes in the killlist from the quadrant
 
-                cv.imwrite('./debug_images/14_quadrant_minimum_point_check' + str(i) + '.png', copy)
+                if debug:
+                    cv.imwrite('./debug_images/14_quadrant_minimum_point_check' + str(i) + '.png', copy)
             return goodpoints
 
         def check_ratio(dist1, dist2, thresh=0.2):
@@ -617,7 +632,8 @@ class Table:
 
         copy[: top], copy[bottom: ] = (0, 0, 0), (0, 0, 0)
         copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
-        cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
+        if debug:
+            cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
 
         adapt_type = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
         thresh_type = cv2.THRESH_BINARY_INV
@@ -651,7 +667,8 @@ class Table:
 
         circles = cv.HoughCircles(blur, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
 
-        circles = circles[0]
+        if circles is not None:
+            circles = circles[0]
 
         # self.circlehistory.append(self.circles)
         # if len(self.circlehistory) > ballframebuffer:
@@ -667,14 +684,14 @@ class Table:
         # if list(self.circles) in self.circlehistory:
         #     print('same circles')
 
-        if draw:
-            frame = self.draw_circles(circles, frame)
-        if findballsize:
-            self.get_ball_size(circles)
+            if draw:
+                frame = self.draw_circles(circles, frame)
+            if findballsize:
+                self.get_ball_size(circles)
 
-        self.add_circles_to_log(circles)
-        self.average_motionblur_circles()
-        self.find_ball_groups()
+            self.add_circles_to_log(circles)
+            self.average_motionblur_circles()
+            self.find_ball_groups()
         return frame
 
     def add_circles_to_log(self, circles):
@@ -702,7 +719,6 @@ class Table:
         distthresh2 = 300
         colorthresh = 120
         tablecolorthresh = 150
-        print(framenum)
         # if len(history) > 0:
         circles = self.circles
 
@@ -733,7 +749,7 @@ class Table:
                     tablediff = color_difference(circ.color, table_color_bgr)
                     if tablediff < tablecolorthresh:
                         print(str(framenum), 'too close to table color')
-
+                        break
                     elif colordiff < colorthresh:
                         if distfrom < distthresh: #  or distfrom < distthresh2:
                             for i in range(len(groups)):
@@ -753,18 +769,19 @@ class Table:
 
             self.grouped_circles = groups
 
-            colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200)]
+            colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200), (0, 0, 0), (255, 255, 255)]
 
-            copy = cur_frame.copy()
-            for i in range(len(groups)):
-                group = groups[i]
-                color = colors[i]
-                for c in group:
-                    cv.circle(copy, c.center, c.radius, color, 3)
-            for c in ungrouped:
-                cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
-            cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
-            cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
+            if debug:
+                copy = cur_frame.copy()
+                for i in range(len(groups)):
+                    group = groups[i]
+                    color = colors[i]
+                    for c in group:
+                        cv.circle(copy, c.center, c.radius, color, 3)
+                for c in ungrouped:
+                    cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
+                cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
+                cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
     def average_motionblur_circles(self, tolerance=2):
         killlist = []
@@ -934,7 +951,8 @@ class Circle:
         x1, y1 = tl[0], tl[1]
         x2, y2 = br[0], br[1]
         cropped = cur_frame[y1: y2, x1: x2]
-        cv.imwrite('./debug_images/ball_crop/15_cropped_ball.png', cropped)
+        if debug:
+            cv.imwrite('./debug_images/ball_crop/15_cropped_ball.png', cropped)
 
         avg_b = int(np.mean(cropped[:, :, 0]))
         avg_g = int(np.mean(cropped[:, :, 1]))
@@ -1037,20 +1055,23 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
 
 
 def play_frame():
+    print(framenum)
     global cur_frame
     ret, frame = cap.read()
-    cur_frame = frame
     if ret:
+        # frame = cv.resize(frame, (shape[1] // 2, shape[0] // 2))
+
+        cur_frame = frame
         # table.drawlines(frame)
-        table.drawboxes(frame)
+        # table.drawboxes(frame)
         table.find_balls(frame)
         cv.imshow('frame', frame)
         cv.moveWindow('frame', 0, 0)
-        # if cv.waitKey(25) & 0xFF == 27:  # 27 is the esc key's number
+        # if cv.waitKey(1) & 0xFF == 27:  # 27 is the esc key's number
         #     return False
         # else:
         #     return True
-        cv2.waitKey(1)
+        cv.waitKey(1)
         return True
     else:
         return False
@@ -1079,4 +1100,7 @@ def main():
 
 main()
 
+
+pr.disable()
+pr.print_stats()
 # shape is h x w x chan
