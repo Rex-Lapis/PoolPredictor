@@ -8,15 +8,17 @@ import pyglview
 viewer = pyglview.Viewer()
 
 debug = False
+livegroups = True
 
 cv2 = cv
 pr = cProfile.Profile()
 pr.enable()
 
 cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip7.mp4')
+viewer = pyglview.Viewer(fullscreen=True, opengl_direct=True)
 fps = FPS().start()
 
-# Currently unused, this is here to potentially calculate the difference at some point of the table
+# Used to calculate the color difference of some potential ball to the table
 table_color_bgr = (210, 140, 10)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
 # This is the average radius in pixels of a ball in the images. There is a findballsize parameter in find_balls
 # that can be used to identify average size
@@ -771,8 +773,11 @@ class Table:
 
             colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200), (0, 0, 0), (255, 255, 255)]
 
-            if debug:
-                copy = cur_frame.copy()
+            if debug or livegroups:
+                if debug:
+                    copy = cur_frame.copy()
+                else:
+                    copy = cur_frame
                 for i in range(len(groups)):
                     group = groups[i]
                     color = colors[i]
@@ -780,8 +785,9 @@ class Table:
                         cv.circle(copy, c.center, c.radius, color, 3)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
-                cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
-                cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
+                if debug:
+                    cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
+                    cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
     def average_motionblur_circles(self, tolerance=2):
         killlist = []
@@ -1001,6 +1007,17 @@ class Ball(Circle):
         self.past.append(item)
 
 
+def stop_loop():
+    cap.release()
+    viewer.stop()
+    cv.destroyAllWindows()
+    fps.stop()
+    pr.disable()
+    pr.print_stats()
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+
 def get_dist(pt1, pt2, seperate=False, absolute=True):
     x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
     if absolute:
@@ -1055,52 +1072,34 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
 
 
 def play_frame():
-    print(framenum)
+    global framenum
     global cur_frame
     ret, frame = cap.read()
     if ret:
-        # frame = cv.resize(frame, (shape[1] // 2, shape[0] // 2))
-
         cur_frame = frame
         # table.drawlines(frame)
         # table.drawboxes(frame)
         table.find_balls(frame)
-        cv.imshow('frame', frame)
-        cv.moveWindow('frame', 0, 0)
-        # if cv.waitKey(1) & 0xFF == 27:  # 27 is the esc key's number
-        #     return False
-        # else:
-        #     return True
-        cv.waitKey(1)
+        fps.update()
+        framenum += 1
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        viewer.set_image(frame)
         return True
     else:
-        return False
+        viewer.destructor_function()
+        exit(9)
 
 
 def main():
     global table, framenum
+    viewer.set_destructor(stop_loop)
     if cap.isOpened():
         table = Table(setting_num=table_detect_setting)
     else:
         print("error opening video")
-    while cap.isOpened():
-        playing = play_frame()
-        framenum += 1
-        fps.update()
-        if not playing:
-            break
-
-    fps.stop()
-    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
-
-    cap.release()
-    cv.destroyAllWindows()
+    viewer.set_loop(play_frame)
+    viewer.start()
 
 
 main()
 
-
-pr.disable()
-pr.print_stats()
-# shape is h x w x chan

@@ -4,8 +4,6 @@
     <list default="true" id="c9e7d9cb-b748-4822-b3c8-c0efdc18f998" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/old/10_ball_area_crop.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/old/10_ball_area_crop.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_images/old/2_canny_check_lines.png" beforeDir="false" afterPath="$PROJECT_DIR$/debug_images/old/2_canny_check_lines.png" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,25 +16,31 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="297">
-              <caret line="15" column="56" selection-start-line="15" selection-start-column="22" selection-end-line="15" selection-end-column="56" />
+            <state relative-caret-position="222">
+              <caret line="789" column="108" selection-start-line="789" selection-start-column="108" selection-end-line="789" selection-end-column="108" />
               <folding>
-                <element signature="e#0#29#0" expanded="true" />
                 <element signature="e#359#470#0" />
                 <element signature="e#529#638#0" />
+                <element signature="e#895#993#0" />
                 <element signature="e#1103#1918#0" />
+                <element signature="e#2310#7227#0" />
                 <element signature="e#2012#2073#0" />
+                <element signature="e#2665#4001#0" />
                 <element signature="e#2447#2578#0" />
                 <element signature="e#2631#2873#0" />
                 <element signature="e#2926#3177#0" />
                 <element signature="e#3212#3279#0" />
                 <element signature="e#3534#3615#0" />
                 <element signature="e#3932#4230#0" />
+                <element signature="e#4540#4862#0" />
                 <element signature="e#4819#5108#0" />
                 <element signature="e#5205#5491#0" />
+                <element signature="e#6091#6217#0" />
+                <element signature="e#6033#6690#0" />
+                <element signature="e#6826#7279#0" />
                 <element signature="e#6959#8105#0" />
                 <element signature="e#6992#7638#0" />
                 <element signature="e#7033#7638#0" />
@@ -46,8 +50,6 @@
                 <element signature="e#7458#7638#0" />
                 <element signature="e#7996#8084#0" />
                 <element signature="e#8033#8084#0" />
-                <element signature="e#8164#8437#0" />
-                <element signature="e#8350#8437#0" />
                 <element signature="e#8498#9086#0" />
                 <element signature="e#8667#8797#0" />
                 <element signature="e#8873#9086#0" />
@@ -92,6 +94,7 @@
                 <element signature="e#16553#16691#0" />
                 <element signature="e#16945#17083#0" />
                 <element signature="e#17344#17482#0" />
+                <element signature="e#17025#17582#0" />
                 <element signature="e#17753#18928#0" />
                 <element signature="e#18068#18429#0" />
                 <element signature="e#18107#18429#0" />
@@ -109,6 +112,7 @@
                 <element signature="e#20731#20872#0" />
                 <element signature="e#21066#23088#0" />
                 <element signature="e#21332#21687#0" />
+                <element signature="e#21990#22986#0" />
                 <element signature="e#22199#22838#0" />
                 <element signature="e#22390#22838#0" />
                 <element signature="e#22528#22838#0" />
@@ -120,24 +124,41 @@
                 <element signature="e#23961#24067#0" />
                 <element signature="e#24111#24217#0" />
                 <element signature="e#26925#27246#0" />
+                <element signature="e#27336#29578#0" />
                 <element signature="e#27940#28015#0" />
                 <element signature="e#28124#28315#0" />
                 <element signature="e#28356#28573#0" />
                 <element signature="e#28612#28677#0" />
+                <element signature="e#26082#26879#0" />
+                <element signature="e#28864#28905#0" />
+                <element signature="e#29631#30288#0" />
                 <element signature="e#29669#29738#0" />
                 <element signature="e#29884#30288#0" />
                 <element signature="e#30010#30054#0" />
-                <element signature="e#27892#28409#0" />
+                <element signature="e#30720#31296#0" />
                 <element signature="e#30552#31472#0" />
+                <element signature="e#30640#31412#0" />
+                <element signature="e#30756#31412#0" />
+                <element signature="e#30884#31412#0" />
+                <element signature="e#31079#31412#0" />
+                <element signature="e#31230#31391#0" />
                 <element signature="e#33686#33914#0" />
                 <element signature="e#30934#31499#0" />
+                <element signature="e#30994#31499#0" />
+                <element signature="e#31091#31359#0" />
                 <element signature="e#31212#31222#0" />
                 <element signature="e#33729#33989#0" />
                 <element signature="e#34119#34277#0" />
                 <element signature="e#31890#32364#0" />
                 <element signature="e#32438#33076#0" />
+                <element signature="e#32818#32850#0" />
+                <element signature="e#32918#33076#0" />
                 <element signature="e#33162#33557#0" />
+                <element signature="e#33215#33535#0" />
+                <element signature="e#33285#33369#0" />
+                <element signature="e#33416#33500#0" />
                 <element signature="e#33635#33803#0" />
+                <element signature="e#33699#33781#0" />
                 <element signature="e#33875#34250#0" />
                 <element signature="e#34805#35982#0" />
                 <element signature="e#34849#35002#0" />
@@ -156,6 +177,7 @@
                 <element signature="e#39870#39891#0" />
                 <element signature="e#39929#39948#0" />
                 <element signature="e#39986#40008#0" />
+                <element signature="e#38067#38299#0" />
                 <element signature="e#40070#40536#0" />
                 <element signature="e#40143#40192#0" />
                 <element signature="e#40211#40306#0" />
@@ -163,18 +185,16 @@
                 <element signature="e#40728#40884#0" />
                 <element signature="e#40925#41011#0" />
                 <element signature="e#41077#41400#0" />
-                <element signature="e#42087#42194#0" />
-                <marker date="1576527021706" expanded="false" signature="40395:40396" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests3.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="550">
-              <caret line="25" selection-start-line="25" selection-end-line="25" />
+            <state relative-caret-position="585">
+              <caret line="76" column="29" selection-start-line="76" selection-start-column="8" selection-end-line="76" selection-end-column="29" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
                 <element signature="e#416#460#0" />
@@ -186,8 +206,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Venv/lib/python3.7/site-packages/pyglview/pyglview.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="313" column="25" selection-start-line="313" selection-start-column="25" selection-end-line="313" selection-end-column="25" />
+            <state relative-caret-position="22">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
               <folding>
                 <element signature="e#23#60#0" expanded="true" />
                 <element signature="e#4123#4480#0" />
@@ -306,9 +326,9 @@
         <option value="$PROJECT_DIR$/tests.py" />
         <option value="$PROJECT_DIR$/read_frames_slow.py" />
         <option value="$PROJECT_DIR$/tests2.py" />
-        <option value="$PROJECT_DIR$/Main.py" />
         <option value="$PROJECT_DIR$/Venv/lib/python3.7/site-packages/pyglview/pyglview.py" />
         <option value="$PROJECT_DIR$/tests3.py" />
+        <option value="$PROJECT_DIR$/Main.py" />
       </list>
     </option>
   </component>
@@ -406,7 +426,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.tests3">
+  <component name="RunManager" selected="Python.Main">
     <configuration name="Main" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="PoolPredictor" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -514,8 +534,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.tests3" />
         <item itemvalue="Python.Main" />
+        <item itemvalue="Python.tests3" />
         <item itemvalue="Python.pyglview" />
         <item itemvalue="Python.tests2" />
         <item itemvalue="Python.read_frames_slow" />
@@ -603,7 +623,14 @@
       <option name="project" value="LOCAL" />
       <updated>1576440220009</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="I added cProfile to try and figure out where the speed could be improved&#10;and found that opencv imshow and imwrite were taking the majority of the&#10;time. I am now working on implementing pyglview for showing the images&#10;so that the gpu can be utilized for playback. I put all of the imwrite&#10;calls under if debug: statements, so that I could turn that on and off&#10;easily for speed tests.">
+      <created>1576531359811</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1576531359811</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -632,7 +659,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.02189781" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Python Console" order="10" weight="0.32919708" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.3283186" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -673,7 +700,8 @@
     <MESSAGE value="Completely revised the distance detection structure. I removed all &#10;methods from the Circle class except for those used to grab the color&#10;within that circle, and I moved the ball-continuity process into the&#10;Table.find_ball_groups method. I added a global frame number variable &#10;that I use for debugging. Basically, every frame, the new set of circles&#10;found is weighed against those in the last frame. Circles that seem to&#10;be contiguous are put into a group with their selves from past frames&#10;and added to Table.grouped_circles. I also added a color checking in &#10;addition to distance checking to help make sure the balls are the same.&#10;The major additions all happened within find_ball_groups. I added a&#10;frames folder to debug_images, and it is currently set up to draw the&#10;circles found in each group over every frame. Each group is drawn with &#10;a different color for better debugging." />
     <MESSAGE value="Created the Ball subclass of Circle. So far, the only thing that's&#10;new from the circle is a .past attribute, which is a list of Circle&#10;objects that were deemed within the Table's find_ball_groups method to &#10;be the same ball from past frames. The find_ball_groups method works&#10;about the same as it did in the last commit, except it has been adapted&#10;so that, rather than just using a list of lists of past locations for &#10;each ball stored directly as a table attribute, the table's list is now&#10;full of ball objects. I added a whole bunch of magic to the Ball class,&#10;so that they can be indexed and appended all the same, so very little&#10;change was needed within the find_ball_groups method. I decided to&#10;switch to Ball objects so that I could more easily compare color and&#10;collisions with methods within the Ball class. Have not implemented any&#10;yet." />
     <MESSAGE value="I restructured the decision tree within find_ball_groups so that it&#10;looks at color first, then moves on to distance. This seems to work much&#10;better. It seems to be able to group balls moving very quickly, even if&#10;there is a missing frame. Huge improvement.&#10;&#10;I also added a method to help with motion-blurred circles. Often Hough-&#10;Circles detects 2 circles on a ball when it is moving very quickly, but&#10;so far the circles have always somewhat overlapped, so I added a method&#10;that would look at all the circles from the frame, and see if any were&#10;closer together than their radii would allow in real life, and if there &#10;were, I would replace them with a point right in between the two. This &#10;improves color comparison as well.&#10;&#10;I also made a few of the Table methods static, and rearranged them to be&#10;all together at the bottom of the Table methods." />
-    <option name="LAST_COMMIT_MESSAGE" value="I restructured the decision tree within find_ball_groups so that it&#10;looks at color first, then moves on to distance. This seems to work much&#10;better. It seems to be able to group balls moving very quickly, even if&#10;there is a missing frame. Huge improvement.&#10;&#10;I also added a method to help with motion-blurred circles. Often Hough-&#10;Circles detects 2 circles on a ball when it is moving very quickly, but&#10;so far the circles have always somewhat overlapped, so I added a method&#10;that would look at all the circles from the frame, and see if any were&#10;closer together than their radii would allow in real life, and if there &#10;were, I would replace them with a point right in between the two. This &#10;improves color comparison as well.&#10;&#10;I also made a few of the Table methods static, and rearranged them to be&#10;all together at the bottom of the Table methods." />
+    <MESSAGE value="I added cProfile to try and figure out where the speed could be improved&#10;and found that opencv imshow and imwrite were taking the majority of the&#10;time. I am now working on implementing pyglview for showing the images&#10;so that the gpu can be utilized for playback. I put all of the imwrite&#10;calls under if debug: statements, so that I could turn that on and off&#10;easily for speed tests." />
+    <option name="LAST_COMMIT_MESSAGE" value="I added cProfile to try and figure out where the speed could be improved&#10;and found that opencv imshow and imwrite were taking the majority of the&#10;time. I am now working on implementing pyglview for showing the images&#10;so that the gpu can be utilized for playback. I put all of the imwrite&#10;calls under if debug: statements, so that I could turn that on and off&#10;easily for speed tests." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -682,11 +710,6 @@
           <url>file://$PROJECT_DIR$/tests2.py</url>
           <line>11</line>
           <option name="timeStamp" value="16" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Venv/lib/python3.7/site-packages/pyglview/pyglview.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="23" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -1031,24 +1054,53 @@
     <entry file="file://$PROJECT_DIR$/blankcheck.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="585">
+          <caret line="76" column="29" selection-start-line="76" selection-start-column="8" selection-end-line="76" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+            <element signature="e#416#460#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Venv/lib/python3.7/site-packages/pyglview/pyglview.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
+          <folding>
+            <element signature="e#23#60#0" expanded="true" />
+            <element signature="e#4123#4480#0" />
+            <element signature="e#4562#4694#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="297">
-          <caret line="15" column="56" selection-start-line="15" selection-start-column="22" selection-end-line="15" selection-end-column="56" />
+        <state relative-caret-position="222">
+          <caret line="789" column="108" selection-start-line="789" selection-start-column="108" selection-end-line="789" selection-end-column="108" />
           <folding>
-            <element signature="e#0#29#0" expanded="true" />
             <element signature="e#359#470#0" />
             <element signature="e#529#638#0" />
+            <element signature="e#895#993#0" />
             <element signature="e#1103#1918#0" />
+            <element signature="e#2310#7227#0" />
             <element signature="e#2012#2073#0" />
+            <element signature="e#2665#4001#0" />
             <element signature="e#2447#2578#0" />
             <element signature="e#2631#2873#0" />
             <element signature="e#2926#3177#0" />
             <element signature="e#3212#3279#0" />
             <element signature="e#3534#3615#0" />
             <element signature="e#3932#4230#0" />
+            <element signature="e#4540#4862#0" />
             <element signature="e#4819#5108#0" />
             <element signature="e#5205#5491#0" />
+            <element signature="e#6091#6217#0" />
+            <element signature="e#6033#6690#0" />
+            <element signature="e#6826#7279#0" />
             <element signature="e#6959#8105#0" />
             <element signature="e#6992#7638#0" />
             <element signature="e#7033#7638#0" />
@@ -1058,8 +1110,6 @@
             <element signature="e#7458#7638#0" />
             <element signature="e#7996#8084#0" />
             <element signature="e#8033#8084#0" />
-            <element signature="e#8164#8437#0" />
-            <element signature="e#8350#8437#0" />
             <element signature="e#8498#9086#0" />
             <element signature="e#8667#8797#0" />
             <element signature="e#8873#9086#0" />
@@ -1104,6 +1154,7 @@
             <element signature="e#16553#16691#0" />
             <element signature="e#16945#17083#0" />
             <element signature="e#17344#17482#0" />
+            <element signature="e#17025#17582#0" />
             <element signature="e#17753#18928#0" />
             <element signature="e#18068#18429#0" />
             <element signature="e#18107#18429#0" />
@@ -1121,6 +1172,7 @@
             <element signature="e#20731#20872#0" />
             <element signature="e#21066#23088#0" />
             <element signature="e#21332#21687#0" />
+            <element signature="e#21990#22986#0" />
             <element signature="e#22199#22838#0" />
             <element signature="e#22390#22838#0" />
             <element signature="e#22528#22838#0" />
@@ -1132,24 +1184,41 @@
             <element signature="e#23961#24067#0" />
             <element signature="e#24111#24217#0" />
             <element signature="e#26925#27246#0" />
+            <element signature="e#27336#29578#0" />
             <element signature="e#27940#28015#0" />
             <element signature="e#28124#28315#0" />
             <element signature="e#28356#28573#0" />
             <element signature="e#28612#28677#0" />
+            <element signature="e#26082#26879#0" />
+            <element signature="e#28864#28905#0" />
+            <element signature="e#29631#30288#0" />
             <element signature="e#29669#29738#0" />
             <element signature="e#29884#30288#0" />
             <element signature="e#30010#30054#0" />
-            <element signature="e#27892#28409#0" />
+            <element signature="e#30720#31296#0" />
             <element signature="e#30552#31472#0" />
+            <element signature="e#30640#31412#0" />
+            <element signature="e#30756#31412#0" />
+            <element signature="e#30884#31412#0" />
+            <element signature="e#31079#31412#0" />
+            <element signature="e#31230#31391#0" />
             <element signature="e#33686#33914#0" />
             <element signature="e#30934#31499#0" />
+            <element signature="e#30994#31499#0" />
+            <element signature="e#31091#31359#0" />
             <element signature="e#31212#31222#0" />
             <element signature="e#33729#33989#0" />
             <element signature="e#34119#34277#0" />
             <element signature="e#31890#32364#0" />
             <element signature="e#32438#33076#0" />
+            <element signature="e#32818#32850#0" />
+            <element signature="e#32918#33076#0" />
             <element signature="e#33162#33557#0" />
+            <element signature="e#33215#33535#0" />
+            <element signature="e#33285#33369#0" />
+            <element signature="e#33416#33500#0" />
             <element signature="e#33635#33803#0" />
+            <element signature="e#33699#33781#0" />
             <element signature="e#33875#34250#0" />
             <element signature="e#34805#35982#0" />
             <element signature="e#34849#35002#0" />
@@ -1168,6 +1237,7 @@
             <element signature="e#39870#39891#0" />
             <element signature="e#39929#39948#0" />
             <element signature="e#39986#40008#0" />
+            <element signature="e#38067#38299#0" />
             <element signature="e#40070#40536#0" />
             <element signature="e#40143#40192#0" />
             <element signature="e#40211#40306#0" />
@@ -1175,31 +1245,6 @@
             <element signature="e#40728#40884#0" />
             <element signature="e#40925#41011#0" />
             <element signature="e#41077#41400#0" />
-            <element signature="e#42087#42194#0" />
-            <marker date="1576527021706" expanded="false" signature="40395:40396" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Venv/lib/python3.7/site-packages/pyglview/pyglview.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="313" column="25" selection-start-line="313" selection-start-column="25" selection-end-line="313" selection-end-column="25" />
-          <folding>
-            <element signature="e#23#60#0" expanded="true" />
-            <element signature="e#4123#4480#0" />
-            <element signature="e#4562#4694#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests3.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="550">
-          <caret line="25" selection-start-line="25" selection-end-line="25" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-            <element signature="e#416#460#0" />
           </folding>
         </state>
       </provider>
