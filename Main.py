@@ -16,6 +16,7 @@ pr.enable()
 
 cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip7.mp4')
 viewer = pyglview.Viewer(fullscreen=True, opengl_direct=True)
+
 fps = FPS().start()
 
 # Used to calculate the color difference of some potential ball to the table
