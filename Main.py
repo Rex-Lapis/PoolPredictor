@@ -4,20 +4,12 @@ import numpy as np
 from math import sqrt
 import cProfile
 import pyglview
-
-viewer = pyglview.Viewer()
-
-debug = False
-livegroups = True
-
 cv2 = cv
-pr = cProfile.Profile()
-pr.enable()
 
-cap = cv.VideoCapture('./clips/2019_PoolChamp_Clip7.mp4')
-viewer = pyglview.Viewer(fullscreen=True, opengl_direct=True)
+debug = False       # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
+livegroups = True  # Displays the group circles live on playback
 
-fps = FPS().start()
+filepath = './clips/2019_PoolChamp_Clip11.mp4'
 
 # Used to calculate the color difference of some potential ball to the table
 table_color_bgr = (210, 140, 10)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
@@ -28,11 +20,12 @@ ballsize = 15
 # balls are real
 ballframebuffer = 5
 # This setting is for the canny and lines used to identify the table boundaries
-table_detect_setting = 2
+table_detect_setting = 2  # 2 was working really well
 
 # These are global for the shape of the frame, and the frame itself
 shape = None
 cur_frame = None
+cleanframe = None
 framenum = 0
 
 
@@ -41,6 +34,9 @@ framenum = 0
 # TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
 # TODO: Take sample of shadow color from right inside the bumper box, and compare it to the color of a circle edge to /
 #  see if it's just a shadow
+# TODO: Create a Boundary or Rectangle class, and make subclasses for the playfield, pocket-area, and table-edges. the /
+#  Table class is getting a bit big and unfocused.
+# TODO: Have the colorthresh adapt to whether or not a ball is a blurry doublecircle
 
 
 class Table:
@@ -625,21 +621,18 @@ class Table:
             out += 'r'
         return out
 
-    def find_balls(self, frame=None, draw=True, setting=2, findballsize=False):
+    def find_balls(self, frame=None, draw=True, setting=3, findballsize=False):
         if frame is None:
-            frame = self.frame.copy()
+            frame = cur_frame
         copy = frame.copy()
         cropbox = self.pocketbox
         top, bottom = cropbox[0][1], cropbox[1][1]
         left, right = cropbox[0][0], cropbox[1][0]
 
-        copy[: top], copy[bottom: ] = (0, 0, 0), (0, 0, 0)
+        copy[: top], copy[bottom:] = (0, 0, 0), (0, 0, 0)
         copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
         if debug:
             cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
-
-        adapt_type = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
-        thresh_type = cv2.THRESH_BINARY_INV
 
         gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
         blur = cv.medianBlur(gray, 5)
@@ -663,6 +656,15 @@ class Table:
             param2 = 20
             dp = 1.5
 
+        elif setting == 3:
+            min_dist = 10
+            ballsize_thresh = 1
+            max_radius = ballsize + ballsize_thresh
+            minradius = ballsize - ballsize_thresh
+            param1 = 80
+            param2 = 30
+            dp = 1.8
+
         if findballsize:
             minradius = 0
             max_radius = 50
@@ -672,20 +674,6 @@ class Table:
 
         if circles is not None:
             circles = circles[0]
-
-        # self.circlehistory.append(self.circles)
-        # if len(self.circlehistory) > ballframebuffer:
-        #     del self.circlehistory[0]
-
-        # self.circlehistory = [list([list(j) for j in i]) for i in self.circlehistory]
-        # self.circles = [list(i) for i in self.circles]
-        #
-        # print(self.circles)
-        # print(self.circlehistory)
-        # print('\n')
-        #
-        # if list(self.circles) in self.circlehistory:
-        #     print('same circles')
 
             if draw:
                 frame = self.draw_circles(circles, frame)
@@ -718,16 +706,18 @@ class Table:
     def find_ball_groups(self):
         history = self.circlehistory
         groups = self.grouped_circles
-        distthresh = 400
-        distthresh2 = 300
-        colorthresh = 120
-        tablecolorthresh = 150
+        distthresh = 100
+        regcolorthresh = 70
+        blurcolorthresh = 110
+        tablecolorthresh = 80
         # if len(history) > 0:
         circles = self.circles
 
         # At the start of the program, start a new group
         if len(groups) == 0:
             if len(history) > 0:
+
+                print('called')
                 oldcircles = history[-1]
                 for circ in circles:
                     circs_w_dists = self.dist_list(circ, oldcircles)
@@ -742,10 +732,15 @@ class Table:
         else:
             oldcircles = [i[-1] for i in groups]
             ungrouped = []
+            ballsappended = []
             for circ in circles:
+                if circ.isblurred:
+                    colorthresh = blurcolorthresh
+                else:
+                    colorthresh = regcolorthresh
                 grouped = False
                 circs_w_dists = self.dist_list(circ, oldcircles)
-                for j in range(5):
+                for j in range(len(groups)):
                     closest = circs_w_dists[j][0]
                     distfrom = circs_w_dists[j][1]
                     colordiff = circ.compare_color(closest)
@@ -754,43 +749,49 @@ class Table:
                         print(str(framenum), 'too close to table color')
                         break
                     elif colordiff < colorthresh:
-                        if distfrom < distthresh: #  or distfrom < distthresh2:
-                            for i in range(len(groups)):
+                        for i in range(len(groups)):
+
+                            if distfrom < distthresh * (groups[i].nmissingframes + 1):  # or distfrom < distthresh2:
                                 if closest in groups[i]:
                                     groups[i].append(circ)
                                     grouped = True
+                                    if groups[i].is_past_boundary(self.playbox):
+                                        groups[i].inpocket = True
                                     break
-                                if len(groups[i]) > ballframebuffer:
-                                    del groups[i][0]
-                            if grouped is True:
-                                break
+                        if grouped is True:
+                            break
                 if not grouped:
                     print('frame:', framenum)
                     print(circ, 'not grouped. was looking for', closest)
                     print('distfrom:', distfrom, 'colordiff:', colordiff)
                     ungrouped.append(circ)
-
             self.grouped_circles = groups
 
-            colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200), (0, 0, 0), (255, 255, 255)]
+            # colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200), (0, 0, 0), (255, 255, 255), (100, 255, 0), (255, 100, 0), (0, 255, 100), (0, 100, 255)]
+            colors = [ball.color for ball in groups]
+            for ball in groups:
+                ball.update_lastseen()
 
             if debug or livegroups:
-                if debug:
+                if debug and not livegroups:
                     copy = cur_frame.copy()
                 else:
                     copy = cur_frame
                 for i in range(len(groups)):
                     group = groups[i]
-                    color = colors[i]
+                    if group.inpocket:
+                        color = (0, 255, 0)
+                    else:
+                        color = colors[i]
                     for c in group:
                         cv.circle(copy, c.center, c.radius, color, 3)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
+                cv.putText(copy, 'frame: ' + str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
                 if debug:
-                    cv.putText(copy, 'frame: '+ str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255 ))
                     cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
-    def average_motionblur_circles(self, tolerance=2):
+    def average_motionblur_circles(self, tolerance=2, colorthresh=40):
         killlist = []
         ilist = []
         for i in range(len(self.circles)):
@@ -801,10 +802,12 @@ class Table:
                 if j in ilist:
                     continue
                 else:
+                    colordiff = circle.compare_color(circle2)
                     dist = get_dist(circle.center, circle2.center)
                     joined_radius = circle.radius + circle2.radius
-                    if dist < joined_radius - tolerance:
+                    if dist < joined_radius - tolerance and colordiff < colorthresh:
                         print(framenum, 'double circle found!!')
+                        print('dist:', dist, 'joined radius:', joined_radius, 'color difference:', colordiff)
                         avgrad = joined_radius / 2
                         avgpoint = self.halfway_point(circle.center, circle2.center)
                         newcirc = Circle(avgpoint, int(avgrad))
@@ -938,7 +941,7 @@ class Circle:
         self.movementthresh = 10
         self.center = center
         self.radius = radius
-        self.legitscore = 0
+        self.isblurred = False
         self.color = self.get_ball_color()
 
     def __repr__(self):
@@ -957,10 +960,9 @@ class Circle:
         tl, br = self.calculate_radius_square()
         x1, y1 = tl[0], tl[1]
         x2, y2 = br[0], br[1]
-        cropped = cur_frame[y1: y2, x1: x2]
+        cropped = cleanframe[y1: y2, x1: x2]
         if debug:
             cv.imwrite('./debug_images/ball_crop/15_cropped_ball.png', cropped)
-
         avg_b = int(np.mean(cropped[:, :, 0]))
         avg_g = int(np.mean(cropped[:, :, 1]))
         avg_r = int(np.mean(cropped[:, :, 2]))
@@ -978,10 +980,10 @@ class Circle:
 class Ball(Circle):
     def __init__(self, circle):
         self.past = []
+        self.inpocket = None
+        self.lastseenframe = None
+        self.nmissingframes = 0
         super().__init__(circle.center, circle.radius)
-
-    # def __repr__(self):
-    #     return str(self.past)
 
     def __str__(self):
         return str(self.past)
@@ -1006,11 +1008,26 @@ class Ball(Circle):
 
     def append(self, item):
         self.past.append(item)
+        self.lastseenframe = framenum
+        self.center = item.center
+        if len(self.past) > ballframebuffer:
+            del self.past[0]
+
+    def update_lastseen(self):
+        self.nmissingframes = framenum - self.lastseenframe
+
+    def is_past_boundary(self, box):
+        x, y = self.center[0], self.center[1]
+        xmin, ymin = box[0][0], box[0][1]
+        xmax, ymax = box[1][0], box[1][1]
+        if x < xmin or x > xmax or y < ymin or y > ymax:
+            return True
+        else:
+            return False
 
 
 def stop_loop():
     cap.release()
-    viewer.stop()
     cv.destroyAllWindows()
     fps.stop()
     pr.disable()
@@ -1074,28 +1091,35 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
 
 def play_frame():
     global framenum
-    global cur_frame
+    global cur_frame, cleanframe
     ret, frame = cap.read()
+    print('frame:', framenum)
     if ret:
         cur_frame = frame
-        # table.drawlines(frame)
-        # table.drawboxes(frame)
+        cleanframe = frame.copy()
+        table.drawboxes(frame)
         table.find_balls(frame)
-        fps.update()
-        framenum += 1
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         viewer.set_image(frame)
-        return True
+        fps.update()
+        framenum += 1
     else:
         viewer.destructor_function()
         exit(9)
 
 
 def main():
-    global table, framenum
+    global table, framenum, viewer, fps, cap, pr
+    cap = cv.VideoCapture(filepath)
+    viewer = pyglview.Viewer(window_width=2000, window_height=1000, fullscreen=False, opengl_direct=True)
+    pr = cProfile.Profile()
+    pr.enable()
+    fps = FPS().start()
     viewer.set_destructor(stop_loop)
     if cap.isOpened():
         table = Table(setting_num=table_detect_setting)
+        cap.release()
+        cap = cv.VideoCapture(filepath)
     else:
         print("error opening video")
     viewer.set_loop(play_frame)
