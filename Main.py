@@ -6,21 +6,24 @@ import cProfile
 import pyglview
 cv2 = cv
 
-debug = False       # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
+debug = True       # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
 livegroups = True  # Displays the group circles live on playback
 
 filepath = './clips/2019_PoolChamp_Clip11.mp4'
 
 # Used to calculate the color difference of some potential ball to the table
 table_color_bgr = (210, 140, 10)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
+
 # This is the average radius in pixels of a ball in the images. There is a findballsize parameter in find_balls
 # that can be used to identify average size
 ballsize = 15
+
 # This is the number of past frames to keep the found circles for identifying trajectories and deciding which
 # balls are real
 ballframebuffer = 5
+
 # This setting is for the canny and lines used to identify the table boundaries
-table_detect_setting = 2  # 2 was working really well
+table_detect_setting = 2
 
 # These are global for the shape of the frame, and the frame itself
 shape = None
@@ -57,6 +60,7 @@ class Table:
         # self.circlehistory = []
         self.circles = []
         self.circlehistory = []
+        self.potentialgroups = []
         self.grouped_circles = []
         # self.balls = []
 
@@ -362,6 +366,7 @@ class Table:
         return horizontal, vertical
 
     def group_lines_by_proximity(self, linelist=None, thresh=30, group_num_thresh=3):
+
         def group(line_):
             x1, y1 = line_[0], line_[1]
             grouped = False
@@ -661,9 +666,9 @@ class Table:
             ballsize_thresh = 1
             max_radius = ballsize + ballsize_thresh
             minradius = ballsize - ballsize_thresh
-            param1 = 80
-            param2 = 30
-            dp = 1.8
+            param1 = 60
+            param2 = 27
+            dp = 1.9
 
         if findballsize:
             minradius = 0
@@ -707,8 +712,8 @@ class Table:
         history = self.circlehistory
         groups = self.grouped_circles
         distthresh = 100
-        regcolorthresh = 70
-        blurcolorthresh = 110
+        regcolorthresh = 90
+        blurcolorthresh = 130
         tablecolorthresh = 80
         # if len(history) > 0:
         circles = self.circles
@@ -716,8 +721,6 @@ class Table:
         # At the start of the program, start a new group
         if len(groups) == 0:
             if len(history) > 0:
-
-                print('called')
                 oldcircles = history[-1]
                 for circ in circles:
                     circs_w_dists = self.dist_list(circ, oldcircles)
@@ -732,7 +735,6 @@ class Table:
         else:
             oldcircles = [i[-1] for i in groups]
             ungrouped = []
-            ballsappended = []
             for circ in circles:
                 if circ.isblurred:
                     colorthresh = blurcolorthresh
@@ -740,7 +742,7 @@ class Table:
                     colorthresh = regcolorthresh
                 grouped = False
                 circs_w_dists = self.dist_list(circ, oldcircles)
-                for j in range(len(groups)):
+                for j in range(len(circs_w_dists)):
                     closest = circs_w_dists[j][0]
                     distfrom = circs_w_dists[j][1]
                     colordiff = circ.compare_color(closest)
@@ -750,27 +752,38 @@ class Table:
                         break
                     elif colordiff < colorthresh:
                         for i in range(len(groups)):
-
-                            if distfrom < distthresh * (groups[i].nmissingframes + 1):  # or distfrom < distthresh2:
-                                if closest in groups[i]:
-                                    groups[i].append(circ)
+                            group = groups[i]
+                            if distfrom < distthresh * (2 * group.nmissingframes + 1):  # or distfrom < distthresh2:
+                                if closest in group:
+                                    group.append(circ)
+                                    group.pastdists.append(distfrom)
                                     grouped = True
-                                    if groups[i].is_past_boundary(self.playbox):
-                                        groups[i].inpocket = True
+                                    if group.is_past_boundary(self.playbox):
+                                        group.inpocket = True
+                                    if len(group.pastdists) > ballframebuffer:
+                                        del group.pastdists[0]
                                     break
                         if grouped is True:
                             break
                 if not grouped:
+                    if not circ.is_past_boundary(self.playbox):
+                        potential_ball = Ball(circ)
+                        potential_ball.append(circ)
+                        groups.append(potential_ball)
                     print('frame:', framenum)
                     print(circ, 'not grouped. was looking for', closest)
                     print('distfrom:', distfrom, 'colordiff:', colordiff)
                     ungrouped.append(circ)
-            self.grouped_circles = groups
 
-            # colors = [(255, 0, 0), (255, 200, 0), (200, 255, 0), (0, 255, 0), (0, 255, 200), (0, 200, 255), (0, 0, 255), (200, 0, 255), (255, 0, 200), (0, 0, 0), (255, 255, 255), (100, 255, 0), (255, 100, 0), (0, 255, 100), (0, 100, 255)]
-            colors = [ball.color for ball in groups]
             for ball in groups:
                 ball.update_lastseen()
+                # ball.update_watchlist()
+                if ball.nmissingframes > 5 and len(ball) < 3:
+                    groups.remove(ball)
+                elif ball.nmissingframes > 20:
+                    groups.remove(ball)
+
+            colors = [ball.color for ball in groups]
 
             if debug or livegroups:
                 if debug and not livegroups:
@@ -779,15 +792,17 @@ class Table:
                     copy = cur_frame
                 for i in range(len(groups)):
                     group = groups[i]
-                    if group.inpocket:
-                        color = (0, 255, 0)
-                    else:
-                        color = colors[i]
+                    # if group.inpocket:
+                    #     color = (0, 255, 0)
+                    # else:
+                    color = colors[i]
                     for c in group:
                         cv.circle(copy, c.center, c.radius, color, 3)
+                    cv.putText(copy, str(group.color), (shape[1] - 600, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
                 cv.putText(copy, 'frame: ' + str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
+                cv.putText(copy, str(len(groups)) + ' groups', (20, shape[0] - 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
                 if debug:
                     cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
@@ -976,13 +991,39 @@ class Circle:
         diff = color_difference(col1, col2)
         return diff
 
+    # def compare_color(self, circ2):
+    #     col1 = self.color
+    #     # b1, g1, r1 = col1[0], col1[1], col1[2]
+    #     col2 = circ2.color
+    #     # b2, g2, r2 = col2[0], col2[1], col2[2]
+    #     # diff = color_difference(col1, col2)
+    #     # diff = 0
+    #     diffs = []
+    #     for i in range(3):
+    #         diff = abs(col1[i] - col2[i]) # ** 2
+    #         diffs.append(diff)
+    #     print(sum(diffs))
+    #     return sum(diffs)
+    #
+
+    def is_past_boundary(self, box):
+        x, y = self.center[0], self.center[1]
+        xmin, ymin = box[0][0], box[0][1]
+        xmax, ymax = box[1][0], box[1][1]
+        if x < xmin or x > xmax or y < ymin or y > ymax:
+            return True
+        else:
+            return False
+
 
 class Ball(Circle):
     def __init__(self, circle):
         self.past = []
+        self.pastdists = []
         self.inpocket = None
         self.lastseenframe = None
         self.nmissingframes = 0
+        self.watchlist = []
         super().__init__(circle.center, circle.radius)
 
     def __str__(self):
@@ -1010,20 +1051,34 @@ class Ball(Circle):
         self.past.append(item)
         self.lastseenframe = framenum
         self.center = item.center
+        self.color = item.color
         if len(self.past) > ballframebuffer:
             del self.past[0]
 
     def update_lastseen(self):
         self.nmissingframes = framenum - self.lastseenframe
 
-    def is_past_boundary(self, box):
-        x, y = self.center[0], self.center[1]
-        xmin, ymin = box[0][0], box[0][1]
-        xmax, ymax = box[1][0], box[1][1]
-        if x < xmin or x > xmax or y < ymin or y > ymax:
-            return True
-        else:
-            return False
+    # def update_watchlist(self):
+    #     thresh = 30
+    #     if len(self.pastdists) > 1:
+    #         mean = np.mean(self.pastdists)
+    #         for i in range(len(self.pastdists)):
+    #             rest = self.pastdists[:i] + self.pastdists[i+1:]
+    #             restmean = np.mean(rest)
+    #             if abs(mean - restmean) > thresh:
+    #                 print('BIG DIFF!!')
+    #             # print(self.pastdists)
+    #             # print(self.pastdists[i], rest)
+
+        # mode = np.mean(self.pastdists)
+        # print('mean:', mode)
+        # locations = [i.center for i in self.past]
+        # locations = np.asarray(locations)
+        # xstd = np.std(locations[:, 0])
+        # ystd = np.std(locations[:, 1])
+        # # if
+        # print(locations)
+        # print('std  x:', xstd, 'y:', ystd)
 
 
 def stop_loop():
