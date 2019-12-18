@@ -6,10 +6,11 @@ import cProfile
 import pyglview
 cv2 = cv
 
-debug = True      # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
+debug = False       # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
 livegroups = True  # Displays the group circles live on playback
 
 filepath = './clips/2019_PoolChamp_Clip7.mp4'
+unintruded = cv.imread('./cleanframe.png')
 
 # Used to calculate the color difference of some potential ball to the table
 table_color_bgr = (210, 140, 10)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
@@ -642,7 +643,8 @@ class Table:
             cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
 
         gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-        blur = cv.medianBlur(gray, 5)
+        # blur = cv.medianBlur(gray, 5)
+        blur = cv.GaussianBlur(gray, (3, 3), 5)
         # thresh = cv2.adaptiveThreshold(blur, 255, adapt_type, thresh_type, 15, 2)
         # cv.imwrite('./debug_images/10_adaptive_thresh.png', thresh)
 
@@ -689,7 +691,9 @@ class Table:
 
             self.add_circles_to_log(circles)
             self.average_motionblur_circles()
-            self.detect_intrusion()
+            # self.hsv_test()
+            # if framenum % 5 == 0:
+            #     self.detect_intrusion()
             self.find_ball_groups()
         return frame
 
@@ -737,8 +741,13 @@ class Table:
         else:
             oldcircles = [i[-1] for i in groups]
             ungrouped = []
+            if framenum == 126:
+                print('\nhere!')
             for circ in circles:
-                if circ.isblurred:
+                if circ.color == (202, 185, 170): # or circ.color == (34, 30, 32):
+                    print('this ball!')
+                    print(circ, circ.color)
+                if circ.isblurred or circ.iswhite:
                     colorthresh = blurcolorthresh
                 else:
                     colorthresh = regcolorthresh
@@ -749,7 +758,7 @@ class Table:
                     distfrom = circs_w_col_n_dists[j][1]
                     colordiff = circ.compare_color(closest)
                     tablediff = color_diff(circ.color, table_color_bgr)
-                    if tablediff < tablecolorthresh:
+                    if tablediff < tablecolorthresh or circ.ispartial:
                         print(str(framenum), 'too close to table color')
                         break
                     elif colordiff < colorthresh:
@@ -770,12 +779,12 @@ class Table:
                         if grouped:
                             break
                 if not grouped:
-                    if not circ.is_past_boundary(self.playbox):
+                    if not circ.is_past_boundary(self.playbox) and not circ.ispartial:
                         potential_ball = Ball(circ)
                         potential_ball.append(circ)
                         groups.append(potential_ball)
                     print('frame:', framenum)
-                    print(circ, 'not grouped. was looking for', closest)
+                    print(circ, circ.color, 'not grouped. was looking for', closest, closest.color)
                     print('distfrom:', distfrom, 'colordiff:', colordiff)
                     ungrouped.append(circ)
 
@@ -788,7 +797,7 @@ class Table:
                     groups.remove(ball)
 
             colors = [ball.color for ball in groups]
-            colorshsv = [ball.hsv for ball in groups]
+            # colorshsv = [ball.hsv for ball in groups]
 
             if debug or livegroups:
                 if debug and not livegroups:
@@ -801,11 +810,11 @@ class Table:
                     #     color = (0, 255, 0)
                     # else:
                     color = colors[i]
-                    hsvcol = colorshsv[i]
+                    # hsvcol = colorshsv[i]
                     for c in ball:
-                        cv.circle(copy, c.center, c.radius, color, 3)
+                        cv.circle(copy, c.center, c.radius, color, 2)
                     cv.putText(copy, str(ball.color), (shape[1] - 600, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
-                    cv.putText(copy, str(ball.hsv), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, hsvcol, thickness=4)
+                    # cv.putText(copy, str(ball.hsv), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, hsvcol, thickness=4)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
                 cv.putText(copy, 'frame: ' + str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
@@ -828,8 +837,8 @@ class Table:
                     dist = distance(circle.center, circle2.center)
                     joined_radius = circle.radius + circle2.radius
                     if dist < joined_radius - tolerance:
-                        print('doublecircle colordiff', colordiff)
                         if colordiff < colorthresh:
+                            print('doublecircle colordiff', colordiff)
                             print(framenum, 'double circle found!!')
                             print('dist:', dist, 'joined radius:', joined_radius, 'color difference:', colordiff)
                             avgrad = joined_radius / 2
@@ -839,33 +848,89 @@ class Table:
                             killlist.append(j)
         self.remove_list_of_indexes(self.circles, killlist)
 
-    def detect_intrusion(self):
-
-        def crop_to_zone():
-            copy = cleanframe.copy()
-            outer = self.pocketbox
-            inner = self.playbox
-            # otop, obot = outer[0][1], outer[1][1]
-            # oleft, oright = outer[0][0], outer[1][0]
-            # itop, ibot = inner[0][1], inner[1][1]
-            # ileft, iright = inner[0][0], inner[1][0]
-            otop, obot = outer[0][1], outer[1][1]
-            oleft, oright = outer[0][0], outer[1][0]
-            itop, ibot = inner[0][1], inner[1][1]
-            ileft, iright = inner[0][0], inner[1][0]
-            copy[itop: ibot, ileft: iright] = (0, 0, 0)
-            zone = copy[otop: obot, oleft:oright]
-            if debug:
-                cv.imwrite('./debug_images/18_intrusion_zone.png', zone)
-            return zone
-
-        area = crop_to_zone()
-        frame = cur_frame.copy()
-        frame = -frame + 255
-        cv.imwrite('./debug_images/18_invert_test.png', frame)
-
-
-
+    # def detect_intrusion(self):
+    #
+    #     def crop_to_zone(copy):
+    #         outer = self.pocketbox
+    #         inner = self.playbox
+    #         # otop, obot = outer[0][1], outer[1][1]
+    #         # oleft, oright = outer[0][0], outer[1][0]
+    #         # itop, ibot = inner[0][1], inner[1][1]
+    #         # ileft, iright = inner[0][0], inner[1][0]
+    #
+    #         otop, obot = outer[0][1], outer[1][1]
+    #         oleft, oright = outer[0][0], outer[1][0]
+    #         itop, ibot = inner[0][1], inner[1][1]
+    #         ileft, iright = inner[0][0], inner[1][0]
+    #
+    #         def sliced(copy):
+    #             # copy = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
+    #             # copy[itop: ibot, ileft: iright] = 0
+    #             zone = copy[otop: obot, oleft:oright]
+    #             return zone
+    #
+    #         zone = sliced(copy)
+    #         if debug:
+    #             cv.imwrite('./debug_images/18_intrusion_zone.png', zone)
+    #         return zone
+    #
+    #     clear = cleanframe
+    #     cleararea = crop_to_zone(clear)
+    #     thresh_ratio = 3
+    #     low = 60
+    #     canny = cv.Canny(cleararea, low, low * thresh_ratio)
+    #     cv.imwrite('./debug_images/18_intrusion_canny.png', canny)
+    #     contours, heirarchy = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    #     # print('pre:', len(contours))
+    #     contours = [i for i in contours if cv.arcLength(i, False) > 100]
+    #     contours = contours[:25]
+    #     print('shape:', canny.shape)
+    #     blank = np.zeros((canny.shape[0], canny.shape[1], 3), dtype='uint8')
+    #
+    #     # for i in range(len(contours)):
+    #         # print(contours[i])
+    #         # if cv.arcLength(contours[i], False):
+    #
+    #     cv.drawContours(blank, contours, -1, (255, 255, 255))
+    #     cv.imwrite('./debug_images/18_contours_' + str(framenum) + '.png', blank)
+    #
+    #     minlinelength = 5
+    #     maxlinegap = 1
+    #     rho = 1.5
+    #
+    #     # blank = cv.cvtColor(blank, cv.COLOR_GRAY2BGR);
+    #     # blank = cv.convertT
+    #     lines = cv2.HoughLinesP(blank, rho, np.pi / 180, 300, minLineLength=minlinelength, maxLineGap=maxlinegap)
+    #     for line in lines:
+    #         line = line[0]
+    #         x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
+    #         cv.line(blank, (x1, y1), (x2, y2), (255, 0, 0), 1)
+    #         cv.imwrite('./debug_images/19_lines_' + str(framenum) + '.png', blank)
+    #     # copy = cleanframe
+    #     # area = crop_to_zone(copy)
+    #     # # frame = cur_frame.copy()
+    #     # # inverted = -area + 255
+    #     # area = cv.cvtColor(area, cv.COLOR_BGR2GRAY)
+    #     # # inverted = cv.cvtColor(inverted, cv.COLOR_BGR2GRAY)
+    #     # cleararea = cv.cvtColor(cleararea, cv.COLOR_BGR2GRAY)
+    #     # # out = cv.add(cleararea, inverted)
+    #     # out = cv.absdiff(area, cleararea)
+    #     # out = out * 3
+    #     # t, out = cv.threshold(out, 50, 255, cv.THRESH_BINARY)
+    #     #
+    #     # # out = cv.multiply(cleararea, area)
+    #     if debug:
+    #         cv.imwrite('./debug_images/18_absdiff_test_1.png', area)
+    #         cv.imwrite('./debug_images/18_absdiff_test_2.png', cleararea)
+    #         cv.imwrite('./debug_images/18_absdiff_test_3.png', out)
+    #
+    # def hsv_test(self):
+    #     hsv = cv.cvtColor(cur_frame, cv.COLOR_BGR2HLS)
+    #     h, l, s = cv.split(hsv)
+    #     if debug:
+    #         cv.imwrite('./debug_images/20_hue.png', h)
+    #         cv.imwrite('./debug_images/20_sat.png', s)
+    #         cv.imwrite('./debug_images/20_lit.png', l)
 
     @staticmethod
     def halfway_point(pt1, pt2):
@@ -1003,8 +1068,14 @@ class Circle:
         self.center = center
         self.radius = radius
         self.isblurred = False
+        self.iswhite = False
+        self.ispartial = False
         self.color = self.get_ball_color()
-        self.hsv = self.get_ball_color(hsv=True)
+        if len([*filter(lambda x: x >= 160, self.color)]) == 3:
+            self.iswhite = True
+        # if all(self.color) > 160:
+        #     self.iswhite = True
+        # self.hsv = self.get_ball_color(hsv=True)
 
     def __repr__(self):
         return str(self.center)
@@ -1031,6 +1102,26 @@ class Circle:
         avg_g = int(np.mean(cropped[:, :, 1]))
         avg_r = int(np.mean(cropped[:, :, 2]))
         avg = (avg_b, avg_g, avg_r)
+
+        rowmean = np.mean(cropped, axis=0)
+        colmean = np.mean(cropped, axis=1)
+
+        closediffs = []
+        closerowdiffs = [i for i in rowmean if color_diff(i, table_color_bgr) < 70]
+        closecoldiffs = [i for i in colmean if color_diff(i, table_color_bgr) < 70]
+        # for i in rowmean:
+        #     diff = color_diff(i, table_color_bgr)
+        #     if diff < 70:
+        #         closediffs.append(diff)
+        combined = len(closerowdiffs) + len(closecoldiffs)
+        if combined > 15:
+            print('table circle found')
+            self.ispartial = True
+        elif combined > 3:
+            self.ispartial = True
+            print('partial circle found')
+
+
         # print(avg)
         return avg
 
@@ -1077,6 +1168,8 @@ class Ball(Circle):
         self.past = []
         self.colorpast = []
         self.latestcolor = None
+        self.queball = False
+        self.eightball = False
         self.inpocket = self.is_past_boundary(table.playbox)
         self.lastseenframe = None
         self.nmissingframes = 0
@@ -1110,12 +1203,21 @@ class Ball(Circle):
         self.lastseenframe = framenum
         self.center = item.center
         # self.color = item.color
-        self.hsv = item.hsv
+        # self.hsv = item.hsv
         self.colorpast.append(item.color)
         if len(self.colorpast) > ballframebuffer * 3:
             del self.colorpast[0]
         if len(self.colorpast) >= ballframebuffer:
             self.set_avgcolor()
+        # self.isque()
+
+    def isque(self):
+        if len([*filter(lambda x: x >= 160, self.color)]) == 3:
+            print('whiteball')
+            self.queball = True
+            self.iswhite = True
+            for i in self.past:
+                i.iswhite = True
 
     def update_lastseen(self):
         self.nmissingframes = framenum - self.lastseenframe
@@ -1175,7 +1277,7 @@ def crop(frame, xcrop=0.05, ycrop=0.05):
     return frame
 
 
-def color_diff(col1, col2, splitchannels=False):
+def color_diff(col1, col2):
     diff = 0
     for i in range(3):
         diff += abs(col1[i] - col2[i])
@@ -1200,6 +1302,7 @@ def play_frame():
     if ret:
         cur_frame = frame
         cleanframe = frame.copy()
+        # cv.imwrite('./cleanframe.png', cleanframe)
         table.drawboxes(frame)
         table.find_balls(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
