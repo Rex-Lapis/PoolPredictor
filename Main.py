@@ -6,10 +6,11 @@ import cProfile
 import pyglview
 cv2 = cv
 
-debug = False       # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
+debug = False      # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
 livegroups = True  # Displays the group circles live on playback
+showgroupcolors = False
 
-filepath = './clips/2019_PoolChamp_Clip7.mp4'
+filepath = './clips/2019_PoolChamp_Clip10.mp4'
 unintruded = cv.imread('./cleanframe.png')
 
 # Used to calculate the color difference of some potential ball to the table
@@ -23,7 +24,7 @@ ballsize = 15
 
 # This is the number of past frames to keep the found circles for identifying trajectories and deciding which
 # balls are real
-ballframebuffer = 5
+ballframebuffer = 10
 
 # This setting is for the canny and lines used to identify the table boundaries
 table_detect_setting = 2
@@ -637,8 +638,14 @@ class Table:
         top, bottom = cropbox[0][1], cropbox[1][1]
         left, right = cropbox[0][0], cropbox[1][0]
 
-        copy[: top], copy[bottom:] = (0, 0, 0), (0, 0, 0)
-        copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
+        def cropit(copy):
+            # copy[: top], copy[bottom:] = (0, 0, 0), (0, 0, 0)
+            # copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
+            copy = copy[top:bottom, left:right]
+            return copy
+
+        copy = cropit(copy)
+
         if debug:
             cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
 
@@ -682,7 +689,9 @@ class Table:
         circles = cv.HoughCircles(blur, cv.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=minradius, maxRadius=max_radius)
 
         if circles is not None:
-            circles = circles[0]
+            circles = [(int(i[0] + left), int(i[1] + top), i[2]) for i in circles[0]]
+
+
 
             if draw:
                 frame = self.draw_circles(circles, frame)
@@ -813,7 +822,8 @@ class Table:
                     # hsvcol = colorshsv[i]
                     for c in ball:
                         cv.circle(copy, c.center, c.radius, color, 2)
-                    cv.putText(copy, str(ball.color), (shape[1] - 600, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
+                    if showgroupcolors:
+                        cv.putText(copy, str(ball.color), (shape[1] - 600, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
                     # cv.putText(copy, str(ball.hsv), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, hsvcol, thickness=4)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
@@ -1064,7 +1074,6 @@ class Table:
 
 class Circle:
     def __init__(self, center, radius):
-        self.movementthresh = 10
         self.center = center
         self.radius = radius
         self.isblurred = False
@@ -1165,11 +1174,13 @@ class Circle:
 class Ball(Circle):
     def __init__(self, circle):
         super().__init__(circle.center, circle.radius)
+        self.movementthresh = 8
         self.past = []
         self.colorpast = []
         self.latestcolor = None
         self.queball = False
         self.eightball = False
+        self.ismoving = False
         self.inpocket = self.is_past_boundary(table.playbox)
         self.lastseenframe = None
         self.nmissingframes = 0
@@ -1209,6 +1220,17 @@ class Ball(Circle):
             del self.colorpast[0]
         if len(self.colorpast) >= ballframebuffer:
             self.set_avgcolor()
+        recent = self.past[-3:]
+        distpast = []
+        for i in range(len(recent) - 1):
+            pt1, pt2 = recent[i].center, recent[i+1].center
+            dist = distance(pt1, pt2)
+            distpast.append(dist)
+        if len([*filter(lambda x: x >= self.movementthresh, distpast)]) > 0:
+            self.ismoving = True
+            self.find_future_path()
+        else:
+            self.ismoving = False
         # self.isque()
 
     def isque(self):
@@ -1230,13 +1252,58 @@ class Ball(Circle):
         r = int(sum(pastcolors[:, 2]) / length)
         self.color = (b, g, r)
 
+    def find_future_path(self):
+        past = np.asarray([i.center for i in self.past])
+        pt1 = self.center
+        pt2 = self.past[0].center
+        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
+        coef = np.polyfit(past[:, 0], past[:, 1], 1)
+        a, b = coef[0], coef[1]
+        # frontpt = (x1, a*x1 + b)
+        y1 = int(a*x1 + b)
+        y2 = int(a*x2 + b)
+        intercept = x2, y2
+        uppery = int(table.playbox[0][1])
+        lowery = int(table.playbox[1][1])
+
+        # backpt = (x2, a*x2 + b)
+        # y = a*x1 + b
+        # print('coefficients:', out)
+
+        # if not xdiff == 0:
+        # slope = a
+        if x1 < x2:
+            x = int(table.playbox[0][0] + self.radius)
+            y2 = int(x * a + b)
+            intercept = (x, y2)
+            # x = int(-y1 * slope + x1)
+            # y = int(table.playbox[0][1] + self.radius)
+
+        elif x1 > x2:
+            x = int(table.playbox[1][0] - self.radius)
+            y2 = int(x * a + b)
+            intercept = (x, y2)
+
+        if y2 < uppery:
+            y2 = uppery + int(self.radius)
+            x = int((y2 - b) / a)
+            intercept = (x, y2)
+
+        elif y2 > lowery:
+            y2 = lowery - int(self.radius)
+            x = int((y2 - b) / a)
+            intercept = (x, y2)
+
+        cv.line(cur_frame, (int(x1), int(y1)), intercept, (255, 255, 255), 2)
+
 
 def stop_loop():
     cap.release()
     cv.destroyAllWindows()
     fps.stop()
     pr.disable()
-    pr.print_stats()
+    # pr.sort_stats('tottime')
+    pr.print_stats(sort='time')
     print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
     print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
@@ -1303,7 +1370,7 @@ def play_frame():
         cur_frame = frame
         cleanframe = frame.copy()
         # cv.imwrite('./cleanframe.png', cleanframe)
-        table.drawboxes(frame)
+        # table.drawboxes(frame)
         table.find_balls(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         viewer.set_image(frame)
