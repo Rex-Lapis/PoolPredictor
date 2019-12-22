@@ -1,20 +1,30 @@
 from imutils.video import FPS
 import cv2 as cv
 import numpy as np
-from math import sqrt
+from numpy.linalg import norm
+import matplotlib.pyplot as plt
+from math import sqrt, atan
 import cProfile
 import pyglview
+from scipy.stats import zscore
+from scipy.spatial.distance import cdist
+import itertools
 cv2 = cv
 
-debug = False      # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
-livegroups = True  # Displays the group circles live on playback
+debugimages = False   # Debug makes playback much slower, but saves images of ball groups for each frame in frames folder
+livegroups = True     # Displays the group circles live on playback
 showgroupcolors = False
+showtrajectory = True
+
+ballcolors = [(230, 230, 225), (45, 25, 35), (160, 85, 50), (65, 85, 160), (60, 75, 223), (115, 190, 227), (86, 168, 225), (80, 110, 35), (148, 93, 228), (65, 30, 205)]
+
+debuglist = []
 
 filepath = './clips/2019_PoolChamp_Clip10.mp4'
 unintruded = cv.imread('./cleanframe.png')
 
 # Used to calculate the color difference of some potential ball to the table
-table_color_bgr = (210, 140, 10)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
+table_color_bgr = (215, 145, 30)   # Green: (60, 105, 0)    Blue: (210, 140, 10)
 
 # This is the number of balls in the frame at the start of the video. not yet used
 nballs = 16
@@ -35,7 +45,6 @@ cur_frame = None
 cleanframe = None
 framenum = 0
 
-
 # TODO: Use table color to determine whether a bumper line is misplaced. could also just use ratio
 # TODO: Try analyzing ratio of h & w of table
 # TODO: Put together a method for the Ball class that detects when it's in contact with another ball or the wall
@@ -45,6 +54,21 @@ framenum = 0
 #  Table class is getting a bit big and unfocused.
 # TODO: Have the colorthresh adapt to whether or not a ball is a blurry doublecircle
 
+
+# class TempArray(np.core.multiarray.array):
+#     def append(self, other):
+#         self = np.append(self, other)
+#
+#     def pop(self, i):
+#         if i < len(self) - 1:
+#             self = np.concatenate(self[:i], self[i + 1:])
+#         else:
+#             self = self[:i]
+#
+# def array(*args, **kwargs):
+#     return TempArray(*args, **kwargs)
+
+# np.array = array
 
 class Table:
     def __init__(self, setting_num=0):
@@ -58,22 +82,26 @@ class Table:
         self.playbox = None
         self.pocketbox = None
         self.tablebox = None
+        self.watchlist = []
         self.intersections = []
         self.setting = setting_num
 
-        # self.circlehistory = []
         self.circles = []
         self.circlehistory = []
         self.potentialgroups = []
-        self.grouped_circles = []
-        # self.balls = []
+        self.balls = []
+        self.allballs = []
 
         self.find_table_lines()
         self.find_all_intersections()
         self.goodpoints = self.check_all_intersections()
+        self.check_line_ratios()
         self.set_boxes(self.goodpoints)
+        self.pocketradius = int((self.playbox[1][0] - self.playbox[0][0]) / 48)
+        self.pocketlocations = self.find_pockets()
+        self.walls = self._get_walls()
         check = self.drawlines(color=(0, 200, 255))
-        if debug:
+        if debugimages:
             cv.imwrite('./debug_images/10_final_lines.png', check)
         print('Table Initialized!')
 
@@ -145,7 +173,7 @@ class Table:
         self.remove_list_of_indexes(self.linelist, poplist)
         print(len(poplist), 'lines removed')
 
-        if debug:
+        if debugimages:
             cv.imwrite('./debug_images/1_canny_check.png', canny)
             cannywlines = self.drawlines(canny)
             cv.imwrite('./debug_images/2_canny_check_lines.png', cannywlines)
@@ -184,7 +212,7 @@ class Table:
         horiz = self.drawlines(frame.copy(), linelist=horizontal, color=(0, 0, 255))
         vert = self.drawlines(frame.copy(), linelist=vertical, color=(0, 0, 255))
 
-        if debug:
+        if debugimages:
             cv.imwrite('./debug_images/4_horizontal_split.png', horiz)
             cv.imwrite('./debug_images/4_vertical_split.png', vert)
 
@@ -195,6 +223,10 @@ class Table:
             lines = self.linelist[key]
             grouped = self.group_lines_by_proximity(lines)
 
+            for i in range(len(grouped)):
+                checkimg = self.drawlines(frame.copy(), linelist=grouped[i], color=(0, 0, 255))
+                cv.imwrite('./debug_images/5_' + key + str(i) + '_lines.png', checkimg)
+
             if key == 'top' or key == 'bottom':
                 axis = 'y'
             else:
@@ -202,16 +234,33 @@ class Table:
             averaged = self.find_average_lines_from_groups(grouped, axis)
             self.linelist[key] = averaged
 
-        if debug:
-            checkimg = self.drawlines(frame.copy(), linelist=grouped, color=(0, 0, 255))
-            cv.imwrite('./debug_images/5_' + key + 'lines.png', checkimg)
-            checkimg = self.drawlines(frame.copy(), linelist=averaged, color=(0, 0, 255))
-            cv.imwrite('./debug_images/6_averaged_' + key + 'lines.png', checkimg)
-            copy2 = self.drawlines(frame.copy(), color=(0, 0, 255))
-            cv.imwrite('./debug_images/7_grouped.png', copy2)
+            if debugimages:
+                checkimg = self.drawlines(frame.copy(), linelist=grouped, color=(0, 0, 255))
+                cv.imwrite('./debug_images/5_' + key + 'lines.png', checkimg)
+                checkimg = self.drawlines(frame.copy(), linelist=averaged, color=(0, 0, 255))
+                cv.imwrite('./debug_images/6_averaged_' + key + 'lines.png', checkimg)
+                copy2 = self.drawlines(frame.copy(), color=(0, 0, 255))
+                cv.imwrite('./debug_images/7_grouped.png', copy2)
 
         print('Lines Found')
+
         return frame
+
+    def find_pockets(self):
+        pockets = self.goodpoints[0]
+        tablemid = int(self.playbox[0][0] + ((self.playbox[1][0] - self.playbox[0][0]) // 2))
+        topmid = (tablemid, self.playbox[0][1])
+        botmid = (tablemid, self.playbox[1][1])
+        pockets.append(topmid)
+        pockets.append(botmid)
+
+        if debugimages:
+            copy = self.frame.copy()
+            for i in pockets:
+                cv.circle(copy, i, self.pocketradius, (255, 0, 200), 2)
+            cv.imwrite('./debug_images/20_pocket_locations.png', copy)
+        print('pocketsdrawn:', pockets)
+        return pockets
 
     def drawlines(self, frame=None, linelist=None, color=(0, 0, 255), thickness=2):
 
@@ -271,91 +320,109 @@ class Table:
 
     def check_line_ratios(self, linedict=None):
 
-        print('Checking line distances by part of table...')
+        play = self.goodpoints[0]
+        pocket = self.goodpoints[1]
+        table = self.goodpoints[2]
 
-        def get_relative_distances():
-            distances = {'full': [], 'wood': [], 'bump': []}
-            for key_ in goodkeys:
-                if key_ == 'top':
-                    ind = 1
-                    top = linedict[key_]
-                    playfield, pockets, table = self.max_mid_min(top, axis='y')
-                elif key_ == 'bottom':
-                    ind = 1
-                    bottom = linedict[key_]
-                    table, pockets, playfield = self.max_mid_min(bottom, axis='y')
-                elif key_ == 'left':
-                    ind = 0
-                    left = linedict[key_]
-                    playfield, pockets, table = self.max_mid_min(left, axis='x')
-                elif key_ == 'right':
-                    ind = 0
-                    right = linedict[key_]
-                    table, pockets, playfield = self.max_mid_min(right, axis='x')
-                else:
-                    print('line_dict is not in the right format in check_line_ratios')
-                loc_play = playfield[ind]
-                loc_poc = pockets[ind]
-                loc_tab = table[ind]
+        playlong = play[1][0] - play[0][0]
+        playshort = play[2][1] - play[1][1]
+        playratio = playlong / playshort
 
-                dist_tab_play = abs(loc_tab - loc_play)
-                dist_tab_poc = abs(loc_tab - loc_poc)
-                dist_poc_play = abs(loc_poc - loc_play)
+        pocketlong = pocket[1][0] - pocket[0][0]
+        pocketshort = pocket[2][1] - pocket[1][1]
+        pocketratio = pocketlong / pocketshort
 
-                distances['full'].append(dist_tab_play)
-                distances['wood'].append(dist_tab_poc)
-                distances['bump'].append(dist_poc_play)
-            avg_widths = {'full': [], 'wood': [], 'bump': []}
-            for key_ in distances:
-                dists = distances[key_]
-                dev = np.std(dists)
-                if dev > 7:  # TODO: may need to tune deviation
-                    print('\ndeviaition is high in ' + key_)
-                    print('you might wanna check the debug images.\n')
-                else:
-                    avg = sum(dists) / len(dists)
-                    avg_widths[key_].append(int(avg))
-            return avg_widths
+        tablelong = table[1][0] - table[0][0]
+        tableshort = table[2][1] - table[1][1]
+        tableratio = tablelong / tableshort
 
-        def check_against_avgs(checklines, xory, avg_dict, thresh=10):
-            checklines = [list(i) for i in checklines]
-            dist_list = [val[0] for val in avg_dict.values()]
-            keeplines = []
-            for i in range(len(checklines)):
-                line = checklines[i]
-                for j in range(i + 1, len(checklines)):                      # TODO: KEEP AND EYE OUT HERE FOR ISSUES
-                    vs_line = checklines[j]
-                    dist = abs(line[xory] - vs_line[xory])
-                    for i in range(dist - thresh, dist + thresh):
-                        if int(i) in dist_list:
-                            if line not in keeplines:
-                                keeplines.append(line)
-                            if vs_line not in keeplines:
-                                keeplines.append(vs_line)
+        print('ratios:', playratio, pocketratio, tableratio)
 
-        if linedict is None:
-            linedict = self.linelist
-        goodkeys = []
-        badkeys = []
-        for key in linedict:
-            group = linedict[key]
-            if len(group) == 3:
-                goodkeys.append(key)
-            else:
-                badkeys.append(key)
-
-        for key in badkeys:
-            group = linedict[key]
-            if len(group) < 3:
-                print('Not enough lines found for the ' + key + ' side. You may need to change the setting or tune some'
-                      ' parameters in Table.find_table_lines()')
-            if len(group) > 3:
-                if key == 'top' or key == 'bottom':
-                    axis = 1
-                elif key == 'left' or key == 'right':
-                    axis = 0
-                average_dists = get_relative_distances()
-                check_against_avgs(group, axis, average_dists)
+        # print('Checking line distances by part of table...')
+        #
+        # def get_relative_distances():
+        #     distances = {'full': [], 'wood': [], 'bump': []}
+        #     for key_ in goodkeys:
+        #         if key_ == 'top':
+        #             ind = 1
+        #             top = linedict[key_]
+        #             playfield, pockets, table = self.max_mid_min(top, axis='y')
+        #         elif key_ == 'bottom':
+        #             ind = 1
+        #             bottom = linedict[key_]
+        #             table, pockets, playfield = self.max_mid_min(bottom, axis='y')
+        #         elif key_ == 'left':
+        #             ind = 0
+        #             left = linedict[key_]
+        #             playfield, pockets, table = self.max_mid_min(left, axis='x')
+        #         elif key_ == 'right':
+        #             ind = 0
+        #             right = linedict[key_]
+        #             table, pockets, playfield = self.max_mid_min(right, axis='x')
+        #         else:
+        #             print('line_dict is not in the right format in check_line_ratios')
+        #         loc_play = playfield[ind]
+        #         loc_poc = pockets[ind]
+        #         loc_tab = table[ind]
+        #
+        #         dist_tab_play = abs(loc_tab - loc_play)
+        #         dist_tab_poc = abs(loc_tab - loc_poc)
+        #         dist_poc_play = abs(loc_poc - loc_play)
+        #
+        #         distances['full'].append(dist_tab_play)
+        #         distances['wood'].append(dist_tab_poc)
+        #         distances['bump'].append(dist_poc_play)
+        #     avg_widths = {'full': [], 'wood': [], 'bump': []}
+        #     for key_ in distances:
+        #         dists = distances[key_]
+        #         dev = np.std(dists)
+        #         if dev > 7:  # TODO: may need to tune deviation
+        #             print('\ndeviaition is high in ' + key_)
+        #             print('you might wanna check the debug images.\n')
+        #         else:
+        #             avg = sum(dists) / len(dists)
+        #             avg_widths[key_].append(int(avg))
+        #     return avg_widths
+        #
+        # def check_against_avgs(checklines, xory, avg_dict, thresh=10):
+        #     checklines = [list(i) for i in checklines]
+        #     dist_list = [val[0] for val in avg_dict.values()]
+        #     keeplines = []
+        #     for i in range(len(checklines)):
+        #         line = checklines[i]
+        #         for j in range(i + 1, len(checklines)):                      # TODO: KEEP AND EYE OUT HERE FOR ISSUES
+        #             vs_line = checklines[j]
+        #             dist = abs(line[xory] - vs_line[xory])
+        #             for i in range(dist - thresh, dist + thresh):
+        #                 if int(i) in dist_list:
+        #                     if line not in keeplines:
+        #                         keeplines.append(line)
+        #                     if vs_line not in keeplines:
+        #                         keeplines.append(vs_line)
+        #
+        # if linedict is None:
+        #     linedict = self.linelist
+        # goodkeys = []
+        # badkeys = []
+        # for key in linedict:
+        #     group = linedict[key]
+        #     if len(group) == 3:
+        #         goodkeys.append(key)
+        #     else:
+        #         badkeys.append(key)
+        #
+        # for key in badkeys:
+        #     group = linedict[key]
+        #     if len(group) < 3:
+        #         print('Not enough lines found for the ' + key + ' side. You may need to change the setting or tune some'
+        #               ' parameters in Table.find_table_lines()')
+        #     if len(group) > 3:
+        #         if key == 'top' or key == 'bottom':
+        #             axis = 1
+        #         elif key == 'left' or key == 'right':
+        #             axis = 0
+        #         average_dists = get_relative_distances()
+        #         check_against_avgs(group, axis, average_dists)
 
     def group_lines_by_direction(self, minlinelen=0):
         vertical = []
@@ -369,7 +436,7 @@ class Table:
                 horizontal.append(self.linelist[i])
         return horizontal, vertical
 
-    def group_lines_by_proximity(self, linelist=None, thresh=30, group_num_thresh=3):
+    def group_lines_by_proximity(self, linelist=None, thresh=20, group_num_thresh=3):
 
         def group(line_):
             x1, y1 = line_[0], line_[1]
@@ -420,15 +487,20 @@ class Table:
     def draw_circles(self, circles, frame=None):
         if frame is None:
             frame = self.frame.copy()
-        if circles is not None:
+
+        # print('circles', type(circles))
+        if isinstance(circles[0], Circle):
+            circles = [(i.center[0], i.center[1], i.radius) for i in circles]
             circles = np.uint16(np.around(circles))
-            for circle in circles:
-                x, y = circle[0], circle[1]
-                radius = circle[2]
-                cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
-                cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
-                rect = self.calculate_radius_square(radius, (x, y))
-                cv.rectangle(frame, rect[0], rect[1], (255, 0, 255), 1)
+        else:
+            circles = np.uint16(np.around(circles))
+        for circle in circles:
+            x, y = circle[0], circle[1]
+            radius = circle[2]
+            cv.circle(frame, (x, y), radius, (0, 255, 0), 1)
+            cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
+            rect = self.calculate_radius_square(radius, (x, y))
+            cv.rectangle(frame, rect[0], rect[1], (255, 0, 255), 1)
         else:
             print('no circles to draw')
         return frame
@@ -460,7 +532,7 @@ class Table:
             elif quad == 'br':
                 br = pt
         self.tablebox = [ul, br]
-        if debug:
+        if debugimages:
             copy = self.frame.copy()
             cv.rectangle(copy, self.playbox[0], self.playbox[1], (0, 200, 255), 2)
             cv.imwrite('./debug_images/8_playbox_check.png', copy)
@@ -536,18 +608,14 @@ class Table:
             return out
 
         def find_good_points(p_w_d):
-            pnts = [i[0] for i in p_w_d]
-            good_groups = []
             quadrants = {'ul': [], 'ur': [], 'br': [], 'bl': []}
             for ptdist in p_w_d:
                 point = ptdist[0]
                 key = self.check_quadrant(point)
                 quadrants[key].append(ptdist)
-            # keylist = []
             for key in quadrants:
                 quadrants[key].sort(key=lambda x: x[1])
                 quadrants[key] = [i[0] for i in quadrants[key]]
-                # keylist.append(key)
             grouplist = []
             goodpoints = {0: [], 1: [], 2: []}
             for i in range(3):                                               # For each or the 3 parts
@@ -573,7 +641,7 @@ class Table:
                                     killlist.append(ind)                                            # Add that index to the killlist
                     quadrants[key] = self.remove_list_of_indexes(quadrants[key], killlist)   # remove all indexes in the killlist from the quadrant
 
-                if debug:
+                if debugimages:
                     cv.imwrite('./debug_images/14_quadrant_minimum_point_check' + str(i) + '.png', copy)
             return goodpoints
 
@@ -631,6 +699,9 @@ class Table:
         return out
 
     def find_balls(self, frame=None, draw=True, setting=3, findballsize=False):
+        colorthresh1 = 20
+        colorthresh2 = 100
+
         if frame is None:
             frame = cur_frame
         copy = frame.copy()
@@ -638,22 +709,13 @@ class Table:
         top, bottom = cropbox[0][1], cropbox[1][1]
         left, right = cropbox[0][0], cropbox[1][0]
 
-        def cropit(copy):
-            # copy[: top], copy[bottom:] = (0, 0, 0), (0, 0, 0)
-            # copy[:, : left], copy[:, right:] = (0, 0, 0), (0, 0, 0)
-            copy = copy[top:bottom, left:right]
-            return copy
+        copy = copy[top:bottom, left:right]
 
-        copy = cropit(copy)
-
-        if debug:
+        if debugimages:
             cv.imwrite('./debug_images/10_ball_area_crop.png', copy)
 
         gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-        # blur = cv.medianBlur(gray, 5)
         blur = cv.GaussianBlur(gray, (3, 3), 5)
-        # thresh = cv2.adaptiveThreshold(blur, 255, adapt_type, thresh_type, 15, 2)
-        # cv.imwrite('./debug_images/10_adaptive_thresh.png', thresh)
 
         if setting == 1:
             min_dist = frame.shape[0] / 64
@@ -691,17 +753,28 @@ class Table:
         if circles is not None:
             circles = [(int(i[0] + left), int(i[1] + top), i[2]) for i in circles[0]]
 
+            self.add_circles_to_log(circles)
 
+            for circle in self.circles:
 
+                if circle.inpocket:
+                    print('inpocket')
+                    thresh = colorthresh2
+                else:
+                    print('notinpocket')
+                    thresh = colorthresh1
+                bcoldifflist = [color_diff(circle.color, i) for i in ballcolors]
+                print(min(bcoldifflist))
+                if min(bcoldifflist) > 80:
+                    self.circles.remove(circle)
             if draw:
-                frame = self.draw_circles(circles, frame)
+                frame = self.draw_circles(self.circles, frame)
             if findballsize:
                 self.get_ball_size(circles)
 
-            self.add_circles_to_log(circles)
             self.average_motionblur_circles()
             # self.hsv_test()
-            # if framenum % 5 == 0:
+            # if framenum % 10 == 0:
             #     self.detect_intrusion()
             self.find_ball_groups()
         return frame
@@ -726,15 +799,16 @@ class Table:
 
     def find_ball_groups(self):
         history = self.circlehistory
-        groups = self.grouped_circles
-        distthresh = 100
+        balls = self.balls
+        distthresh = 110
         regcolorthresh = 90
-        blurcolorthresh = 130
+        blurcolorthresh = 200
         tablecolorthresh = 80
         # if len(history) > 0:
         circles = self.circles
         # At the start of the program, start a new group
-        if len(groups) == 0:
+
+        if len(balls) == 0:
             if len(history) > 0:
                 oldcircles = history[-1]
                 for circ in circles:
@@ -744,18 +818,50 @@ class Table:
                         newball = Ball(circ)
                         newball.append(closest)
                         newball.append(circ)
-                        self.grouped_circles.append(newball)
+                        self.balls.append(newball)
+                        self.allballs.append(newball)
 
         # Once there's a place to start for the group comparisons:
         else:
-            oldcircles = [i[-1] for i in groups]
+            oldcircles = [i[-1] for i in balls]
             ungrouped = []
-            if framenum == 126:
-                print('\nhere!')
+            # circlevecs = np.array([circ.color for circ in circles])
+            # oldcirclevecs = np.array([circ.color for circ in oldcircles])
+            #
+            # distmap = cdist(oldcirclevecs, circlevecs)
+            # distmap = np.round(distmap, 1)
+            #
+            # allinds = []
+            # for row in distmap:
+            #     inds = np.argsort(row)[:3]
+            #     allinds.append(inds)
+            #
+            # allinds = np.array(allinds)
+            # first = allinds[:, 0]
+            #
+            # # mins = np.argmin(distmap, axis=0)
+            # unique = len(np.unique(first))
+            # if unique < len(first):
+            #     print('multiple circles matched to ball')
+            # #
+            # # print('distvecs', distmap)
+            # # print('argmiin:', mins)
             for circ in circles:
-                if circ.color == (202, 185, 170): # or circ.color == (34, 30, 32):
-                    print('this ball!')
-                    print(circ, circ.color)
+                # badcirc = False
+                # print('self.watchlist', self.watchlist)
+                # for ball in self.watchlist:
+                #     color = ball.color
+                #     dist = distance(ball.center, circ.center)
+                #     watchlistcoldiff = color_diff(circ.color, color)
+                #     print('watchlistdiff:', watchlistcoldiff)
+                #     if watchlistcoldiff < 40 and dist < 50:
+                #         # self.watchlist.append(circ.color)
+                #         badcirc = True  #TODO: Append entire ball, rather than just color, and use location to detirmine
+                #                          #TODO: Also make the items in watchlist clearthemselves after a while.
+                #         break
+                # if badcirc:
+                #     continue
+
                 if circ.isblurred or circ.iswhite:
                     colorthresh = blurcolorthresh
                 else:
@@ -767,12 +873,14 @@ class Table:
                     distfrom = circs_w_col_n_dists[j][1]
                     colordiff = circ.compare_color(closest)
                     tablediff = color_diff(circ.color, table_color_bgr)
+                    if j == 0:
+                        debuginfo = {'frame': framenum, 'center': circ.center,'tablediff': tablediff, 'color': circ.color, 'closestcol': closest.color,'colordiff': colordiff, 'closestdist': distfrom}
                     if tablediff < tablecolorthresh or circ.ispartial:
                         print(str(framenum), 'too close to table color')
                         break
                     elif colordiff < colorthresh:
-                        for i in range(len(groups)):
-                            ball = groups[i]
+                        for i in range(len(balls)):
+                            ball = balls[i]
                             if distfrom < distthresh * (2 * ball.nmissingframes + 1):
                                 if closest in ball:
                                     # if group.inpocket and circ.is_past_boundary(self.playbox)
@@ -788,48 +896,58 @@ class Table:
                         if grouped:
                             break
                 if not grouped:
+                    debuglist.append(debuginfo)
                     if not circ.is_past_boundary(self.playbox) and not circ.ispartial:
                         potential_ball = Ball(circ)
                         potential_ball.append(circ)
-                        groups.append(potential_ball)
+                        balls.append(potential_ball)
+                        self.allballs.append(potential_ball)
                     print('frame:', framenum)
                     print(circ, circ.color, 'not grouped. was looking for', closest, closest.color)
                     print('distfrom:', distfrom, 'colordiff:', colordiff)
                     ungrouped.append(circ)
 
-            for ball in groups:
+            for ball in balls:
                 ball.update_lastseen()
-                # ball.update_watchlist()
+                # if ball.variance:
+                #     if ball.variance > 0.25:
+                #         print('ball', ball.color, 'removed for variance of:', ball.variance)
+                #         balls.remove(ball)
                 if ball.nmissingframes > 5 and len(ball) < 3:
-                    groups.remove(ball)
+                    balls.remove(ball)
                 elif ball.nmissingframes > 20:
-                    groups.remove(ball)
+                    balls.remove(ball)
 
-            colors = [ball.color for ball in groups]
+            colors = [ball.color for ball in balls]
             # colorshsv = [ball.hsv for ball in groups]
 
-            if debug or livegroups:
-                if debug and not livegroups:
+            if debugimages or livegroups:
+                if debugimages and not livegroups:
                     copy = cur_frame.copy()
                 else:
                     copy = cur_frame
-                for i in range(len(groups)):
-                    ball = groups[i]
+                for i in range(len(balls)):
+                    ball = balls[i]
                     # if group.inpocket:
                     #     color = (0, 255, 0)
                     # else:
-                    color = colors[i]
+                    if ball.collisioncourse:
+                        color = (0, 0, 255)
+                    else:
+                        color = colors[i]
+
                     # hsvcol = colorshsv[i]
                     for c in ball:
                         cv.circle(copy, c.center, c.radius, color, 2)
                     if showgroupcolors:
                         cv.putText(copy, str(ball.color), (shape[1] - 600, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
-                    # cv.putText(copy, str(ball.hsv), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, hsvcol, thickness=4)
+                        cv.putText(copy, str(ball.variance), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, color, thickness=4)
+                        # cv.putText(copy, str(ball.hsv), (shape[1] - 300, 300 + (40 * i)), cv.FONT_HERSHEY_PLAIN, 2, hsvcol, thickness=4)
                 for c in ungrouped:
                     cv.circle(copy, c.center, c.radius, (0, 0, 0), 2)
                 cv.putText(copy, 'frame: ' + str(framenum), (20, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
-                cv.putText(copy, str(len(groups)) + ' groups', (20, shape[0] - 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
-                if debug:
+                cv.putText(copy, str(len(balls)) + ' groups', (20, shape[0] - 40), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255))
+                if debugimages:
                     cv.imwrite('./debug_images/frames/16_ungrouped_circles_' + str(framenum) + '.png', copy)
 
     def average_motionblur_circles(self, tolerance=2, colorthresh=90):
@@ -860,87 +978,50 @@ class Table:
 
     # def detect_intrusion(self):
     #
-    #     def crop_to_zone(copy):
-    #         outer = self.pocketbox
-    #         inner = self.playbox
-    #         # otop, obot = outer[0][1], outer[1][1]
-    #         # oleft, oright = outer[0][0], outer[1][0]
-    #         # itop, ibot = inner[0][1], inner[1][1]
-    #         # ileft, iright = inner[0][0], inner[1][0]
+    #     outer = self.pocketbox
+    #     inner = self.playbox
     #
-    #         otop, obot = outer[0][1], outer[1][1]
-    #         oleft, oright = outer[0][0], outer[1][0]
-    #         itop, ibot = inner[0][1], inner[1][1]
-    #         ileft, iright = inner[0][0], inner[1][0]
+    #     otop, obot = outer[0][1], outer[1][1]
+    #     oleft, oright = outer[0][0], outer[1][0]
+    #     itop, ibot = inner[0][1], inner[1][1]
+    #     ileft, iright = inner[0][0], inner[1][0]
+    #     copy = cleanframe
+    #     top = copy[otop: itop, ileft: iright]
+    #     bot = copy[ibot: obot, ileft: iright]
+    #     left = copy[itop: ibot, oleft: ileft]
+    #     right = copy[itop: ibot, iright: oright]
     #
-    #         def sliced(copy):
-    #             # copy = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-    #             # copy[itop: ibot, ileft: iright] = 0
-    #             zone = copy[otop: obot, oleft:oright]
-    #             return zone
+    #     z = [0, 0, 0]
     #
-    #         zone = sliced(copy)
-    #         if debug:
-    #             cv.imwrite('./debug_images/18_intrusion_zone.png', zone)
-    #         return zone
-    #
-    #     clear = cleanframe
-    #     cleararea = crop_to_zone(clear)
-    #     thresh_ratio = 3
-    #     low = 60
-    #     canny = cv.Canny(cleararea, low, low * thresh_ratio)
-    #     cv.imwrite('./debug_images/18_intrusion_canny.png', canny)
-    #     contours, heirarchy = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    #     # print('pre:', len(contours))
-    #     contours = [i for i in contours if cv.arcLength(i, False) > 100]
-    #     contours = contours[:25]
-    #     print('shape:', canny.shape)
-    #     blank = np.zeros((canny.shape[0], canny.shape[1], 3), dtype='uint8')
-    #
-    #     # for i in range(len(contours)):
-    #         # print(contours[i])
-    #         # if cv.arcLength(contours[i], False):
-    #
-    #     cv.drawContours(blank, contours, -1, (255, 255, 255))
-    #     cv.imwrite('./debug_images/18_contours_' + str(framenum) + '.png', blank)
-    #
-    #     minlinelength = 5
-    #     maxlinegap = 1
-    #     rho = 1.5
-    #
-    #     # blank = cv.cvtColor(blank, cv.COLOR_GRAY2BGR);
-    #     # blank = cv.convertT
-    #     lines = cv2.HoughLinesP(blank, rho, np.pi / 180, 300, minLineLength=minlinelength, maxLineGap=maxlinegap)
-    #     for line in lines:
-    #         line = line[0]
-    #         x1, y1, x2, y2 = line[0], line[1], line[2], line[3]
-    #         cv.line(blank, (x1, y1), (x2, y2), (255, 0, 0), 1)
-    #         cv.imwrite('./debug_images/19_lines_' + str(framenum) + '.png', blank)
-    #     # copy = cleanframe
-    #     # area = crop_to_zone(copy)
-    #     # # frame = cur_frame.copy()
-    #     # # inverted = -area + 255
-    #     # area = cv.cvtColor(area, cv.COLOR_BGR2GRAY)
-    #     # # inverted = cv.cvtColor(inverted, cv.COLOR_BGR2GRAY)
-    #     # cleararea = cv.cvtColor(cleararea, cv.COLOR_BGR2GRAY)
-    #     # # out = cv.add(cleararea, inverted)
-    #     # out = cv.absdiff(area, cleararea)
-    #     # out = out * 3
-    #     # t, out = cv.threshold(out, 50, 255, cv.THRESH_BINARY)
+    #     # topmean = np.mean(top, axis=0)
+    #     # toprows = [[255, 255, 255] if color_diff(i, table_color_bgr) > 160 else [z] for i in topmean]
+    #     # toprows = np.asarray(toprows)
     #     #
-    #     # # out = cv.multiply(cleararea, area)
-    #     if debug:
-    #         cv.imwrite('./debug_images/18_absdiff_test_1.png', area)
-    #         cv.imwrite('./debug_images/18_absdiff_test_2.png', cleararea)
-    #         cv.imwrite('./debug_images/18_absdiff_test_3.png', out)
+    #     # botmean = np.mean(bot, axis=0)
+    #     # botrows = [[255, 255, 255] if color_diff(i, table_color_bgr) > 160 else [z] for i in botmean]
+    #     # botrows = np.asarray(botrows)
     #
-    # def hsv_test(self):
-    #     hsv = cv.cvtColor(cur_frame, cv.COLOR_BGR2HLS)
-    #     h, l, s = cv.split(hsv)
-    #     if debug:
-    #         cv.imwrite('./debug_images/20_hue.png', h)
-    #         cv.imwrite('./debug_images/20_sat.png', s)
-    #         cv.imwrite('./debug_images/20_lit.png', l)
+    #     lmean = np.mean(left, axis=1)
+    #     tcolor = np.asarray(table_color_bgr)
+    #     diffs = abs(lmean - tcolor)
+    #
+    #
+    #     # leftrows = [[255, 255, 255] if color_diff(i, table_color_bgr) > 160 else [z, z, z] for i in leftmean]
+    #
+    #     # leftrows = np.asarray(leftrows)
+    #     # leftrows = cv.cvtColor(leftrows, cv.COLOR_BGR2GRAY)
+    #     # retval, leftrows = cv.threshold(leftrows, 50, 255, cv.THRESH_BINARY)
+    #
+    #     # rightmean = np.mean(right, axis=1)
+    #     # rightrows = [[255, 255, 255] if color_diff(i, table_color_bgr) > 160 else [z] for i in rightmean]
+    #     # rightrows = np.asarray(rightrows)
+    #
+    #
+    #
+    #     # cv.imwrite('./debug_images/20_topmean.png', toprows)
+    #     # cv.imwrite('./debug_images/20_botmean.png', botrows)
+    #     cv.imwrite('./debug_images/20_leftmean.png', leftrows)
+    #     # cv.imwrite('./debug_images/20_rightmean.png', rightrows)
 
     @staticmethod
     def halfway_point(pt1, pt2):
@@ -1071,6 +1152,15 @@ class Table:
         else:
             return dist
 
+    def _get_walls(self):
+        boxpoints = self.goodpoints[0]
+        return {'top': (boxpoints[0], boxpoints[1]), 'bottom': (boxpoints[2], boxpoints[3]), 'left': (boxpoints[0], boxpoints[3]), 'right': (boxpoints[1], boxpoints[2])}
+        # def _
+        # walls = {side: lambda x: ta
+        #     upper_bound = np.array((table.playbox[1][0], table.playbox[0][1]))
+        # lower_bound = np.array((table.playbox[1][0], table.playbox[1][1]))
+        # }
+
 
 class Circle:
     def __init__(self, center, radius):
@@ -1080,6 +1170,7 @@ class Circle:
         self.iswhite = False
         self.ispartial = False
         self.color = self.get_ball_color()
+        self.inpocket = self.is_past_boundary(table.playbox)
         if len([*filter(lambda x: x >= 160, self.color)]) == 3:
             self.iswhite = True
         # if all(self.color) > 160:
@@ -1105,7 +1196,7 @@ class Circle:
         cropped = cleanframe[y1: y2, x1: x2]
         if hsv:
             cropped = cv.cvtColor(cropped, cv.COLOR_BGR2HSV)
-        if debug:
+        if debugimages:
             cv.imwrite('./debug_images/ball_crop/15_cropped_ball.png', cropped)
         avg_b = int(np.mean(cropped[:, :, 0]))
         avg_g = int(np.mean(cropped[:, :, 1]))
@@ -1115,7 +1206,6 @@ class Circle:
         rowmean = np.mean(cropped, axis=0)
         colmean = np.mean(cropped, axis=1)
 
-        closediffs = []
         closerowdiffs = [i for i in rowmean if color_diff(i, table_color_bgr) < 70]
         closecoldiffs = [i for i in colmean if color_diff(i, table_color_bgr) < 70]
         # for i in rowmean:
@@ -1146,21 +1236,6 @@ class Circle:
             diff = color_diff(col1, col2)
             return diff
 
-    # def compare_color(self, circ2):
-    #     col1 = self.color
-    #     # b1, g1, r1 = col1[0], col1[1], col1[2]
-    #     col2 = circ2.color
-    #     # b2, g2, r2 = col2[0], col2[1], col2[2]
-    #     # diff = color_difference(col1, col2)
-    #     # diff = 0
-    #     diffs = []
-    #     for i in range(3):
-    #         diff = abs(col1[i] - col2[i]) # ** 2
-    #         diffs.append(diff)
-    #     print(sum(diffs))
-    #     return sum(diffs)
-    #
-
     def is_past_boundary(self, box):
         x, y = self.center[0], self.center[1]
         xmin, ymin = box[0][0], box[0][1]
@@ -1174,15 +1249,25 @@ class Circle:
 class Ball(Circle):
     def __init__(self, circle):
         super().__init__(circle.center, circle.radius)
-        self.movementthresh = 8
-        self.past = []
-        self.colorpast = []
+        self.movementthresh = 5
+        self.past = Buffer(fullhist=False)
+        self.colorpast = Buffer(fullhist=False, maxlength=ballframebuffer * 3)
         self.latestcolor = None
         self.queball = False
         self.eightball = False
         self.ismoving = False
-        self.inpocket = self.is_past_boundary(table.playbox)
+        self.motion = Motion
         self.lastseenframe = None
+        self.coefficients = None
+        self.colliding = None
+        self.collisioncourse = False
+        self.velocitypast = Buffer(fullhist=False)
+        self.speed = 0
+        self.motionline = None
+        self.speedlist = []
+        self.variancebuffer = []
+        self.variancehistory = np.array([])
+        self.variance = 0
         self.nmissingframes = 0
         self.watchlist = []
 
@@ -1209,37 +1294,39 @@ class Ball(Circle):
 
     def append(self, item):
         self.past.append(item)
-        if len(self.past) > ballframebuffer:
-            del self.past[0]
+
         self.lastseenframe = framenum
         self.center = item.center
-        # self.color = item.color
-        # self.hsv = item.hsv
+
         self.colorpast.append(item.color)
-        if len(self.colorpast) > ballframebuffer * 3:
-            del self.colorpast[0]
+
         if len(self.colorpast) >= ballframebuffer:
             self.set_avgcolor()
-        recent = self.past[-3:]
+
+        recent = self.past[-5:]
         distpast = []
         for i in range(len(recent) - 1):
             pt1, pt2 = recent[i].center, recent[i+1].center
             dist = distance(pt1, pt2)
             distpast.append(dist)
-        if len([*filter(lambda x: x >= self.movementthresh, distpast)]) > 0:
-            self.ismoving = True
-            self.find_future_path()
+
+        # if len([*filter(lambda x: x >= self.movementthresh, distpast)]) > 0:
+        if len(distpast) > 2:
+            self.speed = sum(distpast) / len(distpast)
+            self.speedlist.append(self.speed)
+            if len(self.speedlist) > ballframebuffer:
+                del self.speedlist[0]
+            self.ismoving = len([*filter(lambda x: x >= self.movementthresh, distpast)]) > 0 and self.speed > self.movementthresh
+            if self.ismoving:
+                if showtrajectory:
+                    if len(self.past) >= ballframebuffer and self.nmissingframes < 3 and not self.inpocket:
+                        self.find_future_path()
+            else:
+                self.velocitypast.append((0, 0))
         else:
             self.ismoving = False
-        # self.isque()
-
-    def isque(self):
-        if len([*filter(lambda x: x >= 160, self.color)]) == 3:
-            print('whiteball')
-            self.queball = True
-            self.iswhite = True
-            for i in self.past:
-                i.iswhite = True
+            self.variancebuffer.append((0, 0))
+        self.ischaotic()
 
     def update_lastseen(self):
         self.nmissingframes = framenum - self.lastseenframe
@@ -1253,59 +1340,196 @@ class Ball(Circle):
         self.color = (b, g, r)
 
     def find_future_path(self):
+        speedmultiplier = 40
         past = np.asarray([i.center for i in self.past])
-        pt1 = self.center
-        pt2 = self.past[0].center
-        x1, y1, x2, y2 = pt1[0], pt1[1], pt2[0], pt2[1]
-        coef = np.polyfit(past[:, 0], past[:, 1], 1)
+        pball = np.asarray(self.center)
+        pt2 = np.asarray(self.past[0].center)
+        x1, y1, x2, y2 = pball[0], pball[1], pt2[0], pt2[1]
+        coef = np.polyfit(past[:, 0], past[:, 1], deg=1)
         a, b = coef[0], coef[1]
-        # frontpt = (x1, a*x1 + b)
+        self.motion.coefficients = (a, b)
         y1 = int(a*x1 + b)
         y2 = int(a*x2 + b)
         intercept = x2, y2
         uppery = int(table.playbox[0][1])
         lowery = int(table.playbox[1][1])
 
-        # backpt = (x2, a*x2 + b)
-        # y = a*x1 + b
-        # print('coefficients:', out)
+        speed = sum(self.speedlist) / len(self.speedlist)
+        collision = False
 
-        # if not xdiff == 0:
-        # slope = a
+        # if going left
         if x1 < x2:
-            x = int(table.playbox[0][0] + self.radius)
+            arrowx = int(self.center[0] - (speed * speedmultiplier))
+            borderx = int(table.playbox[0][0] + self.radius)
+            if arrowx > borderx:
+                x = arrowx
+                collision = False
+            else:
+                x = int(table.playbox[0][0] + self.radius)
+                collision = 'left'
             y2 = int(x * a + b)
             intercept = (x, y2)
-            # x = int(-y1 * slope + x1)
-            # y = int(table.playbox[0][1] + self.radius)
 
+        # if going right
         elif x1 > x2:
-            x = int(table.playbox[1][0] - self.radius)
+            arrowx = int(self.center[0] + (speed * speedmultiplier))
+            borderx = int(table.playbox[1][0] - self.radius)
+            if arrowx < borderx:
+                x = arrowx
+                collision = False
+            else:
+                x = borderx
+                collision = 'right'
             y2 = int(x * a + b)
             intercept = (x, y2)
 
+        # if crossing upperbound before intersection with sides
         if y2 < uppery:
             y2 = uppery + int(self.radius)
             x = int((y2 - b) / a)
+            collision = 'top'
             intercept = (x, y2)
 
+        # if crossing lowerbound before intersection with sides
         elif y2 > lowery:
             y2 = lowery - int(self.radius)
             x = int((y2 - b) / a)
+            collision = 'bottom'
             intercept = (x, y2)
 
-        cv.line(cur_frame, (int(x1), int(y1)), intercept, (255, 255, 255), 2)
+        self.motionline = (self.center, intercept)
+        self.checkballsinpath()
+
+        intercept = np.array(intercept)
+
+        velocity = intercept - pball
+
+        if collision:
+            wall = table.walls[collision]
+            v_corner = np.array(wall[0]) - intercept
+            v_ball = pball - intercept
+            orth1 = np.array((v_corner[1], -v_corner[0]))
+            orth2 = np.array((-v_corner[1], v_corner[0]))
+            dot_left = orth1.dot(v_ball)
+            dot_right = orth2.dot(v_ball)
+            v_mirror = [orth1, orth2][np.argmax(np.array((dot_left, dot_right)))]
+            v_mirror_unitv = v_mirror / norm(v_mirror)
+            reflection = 2 * (v_ball.dot(v_mirror_unitv)) * v_mirror_unitv - v_ball
+            end_point = (intercept + reflection).astype('int')
+            cv.line(cur_frame, tuple(pball), tuple(intercept), (255, 255, 255), 2)
+            cv.arrowedLine(cur_frame, tuple(intercept), tuple(end_point), (255, 255, 255), 2, tipLength=0.05)
+
+        else:
+            cv.arrowedLine(cur_frame, tuple(pball), tuple(intercept), (255, 255, 255), 2, tipLength=0.05)
+        if norm(velocity) == 0:
+            velocity_unit = (0, 0)
+        else:
+            velocity_unit = velocity / norm(velocity)
+        self.velocitypast.append(velocity_unit)
+        # self.velocitypast = np.append(self.velocitypast, velocity_unit)
+
+    # def ischaotic_old(self):
+    #     if self.ismoving:
+    #         pastlocs = [i.center for i in self.past]
+    #         totdistlist = []
+    #         xdistlist = []
+    #         ydistlist = []
+    #         for i in range(len(pastlocs) - 1):
+    #             pt1 = pastlocs[i]
+    #             pt2 = pastlocs[i+1]
+    #             dists = distance(pt1, pt2, seperate=True, absolute=False)
+    #             totdistlist.append(dists[0])
+    #             xdistlist.append(dists[1])
+    #             ydistlist.append(dists[2])
+    #
+    #         switchcount = 0
+    #         if len(totdistlist) > 2:
+    #             for j in range(len(totdistlist) - 1):
+    #                 xdist1, xdist2 = xdistlist[j], xdistlist[j + 1]
+    #                 ydist1, ydist2 = ydistlist[j], ydistlist[j + 1]
+    #                 if abs(xdist1) > 15 and abs(xdist2) > 15:
+    #                     if xdist1 / xdist2 < 0:
+    #                         switchcount += 1
+    #                 if abs(ydist1) > 15 and abs(ydist2) > 15:
+    #                     if ydist1 / ydist2 < 0:
+    #                         switchcount += 1
+    #         # print('switches', switchcount)
+    #         if switchcount > 4:
+    #             table.watchlist.append(self.past[-1])
+    #             self.variance = 250
+    #
+    #     #         xvar = statistics.variance(xdistlist)
+    #     #         yvar = statistics.variance(ydistlist)
+    #     #         self.variancehistory.append((xvar + yvar) / 2)
+    #     # else:
+    #     #     self.variancehistory.append(0)
+    #     # self.variance = sum(self.variancehistory) / len(self.variancehistory)
+
+    def ischaotic(self):
+        if len(self.velocitypast) > 4:
+            var = norm(self.velocitypast.arr.var(axis=0))
+            self.variance = var
+            # print('var', var)
+            self.variancehistory = np.append(self.variancehistory, var)
+
+    def checkballsinpath(self):
+        if self.motionline is not None:
+            p1 = np.asarray(self.motionline[0])
+            p2 = np.asarray(self.motionline[1])
+            for ball in table.balls:
+                if not ball.center == self.center:
+                    p3 = np.asarray(ball.center)
+                    # TODO: check
+                    if norm(p2 - p1) == 0:
+                        dist = 1000000
+                    else:
+                        dist = abs(norm(np.cross(p2 - p1, p1 - p3)) / norm(p2 - p1))
+                    if dist < self.radius + ball.radius:
+                        ball.collisioncourse = True
+                    else:
+                        ball.collisioncourse = False
 
 
-def stop_loop():
-    cap.release()
-    cv.destroyAllWindows()
-    fps.stop()
-    pr.disable()
-    # pr.sort_stats('tottime')
-    pr.print_stats(sort='time')
-    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+class Buffer(list):
+    def __init__(self, iterable=[], fullhist=True, maxlength=ballframebuffer):
+        if not fullhist and len(iterable) > maxlength:
+            iterable = iterable[-maxlength:]
+        super().__init__(iterable)
+        self.fullhist = fullhist
+        self.maxlength = maxlength
+
+    @property
+    def recent(self):
+        if self.isfull:
+            return self[-self.maxlength:]
+        else:
+            return self
+
+    @property
+    def arr(self):
+        return np.array(self)
+
+    @property
+    def r_arr(self):
+        return np.array(self.recent)
+
+    @property
+    def isfull(self):
+        return len(self) > self.maxlength
+
+    def append(self, item):
+        super().append(item)
+        if self.isfull and not self.fullhist:
+            self.pop(0)
+
+
+class Motion:
+    def __init__(self, speed=None, direction=None, coefficients=None):
+        self.speed = speed
+        self.direction = direction
+        self.coefficients = coefficients
+
+    # def detect_collision(self):
 
 
 def distance(pt1, pt2, seperate=False, absolute=True):
@@ -1345,6 +1569,7 @@ def crop(frame, xcrop=0.05, ycrop=0.05):
 
 
 def color_diff(col1, col2):
+
     diff = 0
     for i in range(3):
         diff += abs(col1[i] - col2[i])
@@ -1359,6 +1584,14 @@ def auto_canny(image, sigma=0.33, uppermod=1, lowermod=1):
     upper = int(min(255, (1.0 + sigma) * v) * uppermod)
     edged = cv.Canny(image, lower, upper)
     return edged
+
+
+def pop(array, i):
+    if i < len(array) - 1:
+        array = np.concatenate([array[:i], array[i + 1:]])
+    else:
+        array = array[:i]
+    return array
 
 
 def play_frame():
@@ -1381,10 +1614,29 @@ def play_frame():
         exit(9)
 
 
+def stop_loop():
+    cap.release()
+    cv.destroyAllWindows()
+    fps.stop()
+    pr.disable()
+    # pr.sort_stats('tottime')
+    for i in debuglist:
+        print(i)
+    pr.print_stats(sort='time')
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+    # plt.figure(figsize=(8, 8))
+    # for ball in table.allballs:
+    #     plt.plot(ball.variancehistory)
+    # plt.show()
+
+
 def main():
     global table, framenum, viewer, fps, cap, pr
+    np.set_printoptions(linewidth=200)
     cap = cv.VideoCapture(filepath)
-    viewer = pyglview.Viewer(window_width=2000, window_height=1000, fullscreen=False, opengl_direct=True)
+    viewer = pyglview.Viewer(window_width=2000, window_height=1000, fullscreen=True, opengl_direct=True)
     pr = cProfile.Profile()
     pr.enable()
     fps = FPS().start()
@@ -1400,4 +1652,3 @@ def main():
 
 
 main()
-
