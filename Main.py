@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from math import sqrt, atan
 import cProfile
 import pyglview
+import time
 from scipy.stats import zscore
 from scipy.spatial.distance import cdist
 import itertools
@@ -15,6 +16,9 @@ debugimages = False   # Debug makes playback much slower, but saves images of ba
 livegroups = True     # Displays the group circles live on playback
 showgroupcolors = False
 showtrajectory = True
+n_wall_bounces = 3
+
+slowdown = 0
 
 ballcolors = [(230, 230, 225), (45, 25, 35), (160, 85, 50), (65, 85, 160), (60, 75, 223), (115, 190, 227), (86, 168, 225), (80, 110, 35), (148, 93, 228), (65, 30, 205)]
 
@@ -501,8 +505,6 @@ class Table:
             cv.circle(frame, (x, y), 2, (0, 0, 255), 2)
             rect = self.calculate_radius_square(radius, (x, y))
             cv.rectangle(frame, rect[0], rect[1], (255, 0, 255), 1)
-        else:
-            print('no circles to draw')
         return frame
 
     def set_boxes(self, goodpoints):
@@ -758,13 +760,11 @@ class Table:
             for circle in self.circles:
 
                 if circle.inpocket:
-                    print('inpocket')
                     thresh = colorthresh2
                 else:
-                    print('notinpocket')
                     thresh = colorthresh1
                 bcoldifflist = [color_diff(circle.color, i) for i in ballcolors]
-                print(min(bcoldifflist))
+                # print(min(bcoldifflist))
                 if min(bcoldifflist) > 80:
                     self.circles.remove(circle)
             if draw:
@@ -1263,7 +1263,7 @@ class Ball(Circle):
         self.collisioncourse = False
         self.velocitypast = Buffer(fullhist=False)
         self.speed = 0
-        self.motionline = None
+        self.motionlines = []
         self.speedlist = []
         self.variancebuffer = []
         self.variancehistory = np.array([])
@@ -1323,6 +1323,7 @@ class Ball(Circle):
                         self.find_future_path()
             else:
                 self.velocitypast.append((0, 0))
+                # self.velocitypast = np.append(self.velocitypast, (0, 0))
         else:
             self.ismoving = False
             self.variancebuffer.append((0, 0))
@@ -1340,87 +1341,130 @@ class Ball(Circle):
         self.color = (b, g, r)
 
     def find_future_path(self):
-        speedmultiplier = 40
+        self.motionlines = []
+        velocity_multiplier = 60
+
+        speed = sum(self.speedlist) / len(self.speedlist)
+        vel = speed * velocity_multiplier
+        self.motion.speed = vel
+
         past = np.asarray([i.center for i in self.past])
-        pball = np.asarray(self.center)
-        pt2 = np.asarray(self.past[0].center)
-        x1, y1, x2, y2 = pball[0], pball[1], pt2[0], pt2[1]
-        coef = np.polyfit(past[:, 0], past[:, 1], deg=1)
-        a, b = coef[0], coef[1]
-        self.motion.coefficients = (a, b)
-        y1 = int(a*x1 + b)
-        y2 = int(a*x2 + b)
-        intercept = x2, y2
+
+        ballpt = np.asarray(self.center)
+        # pt2 = np.asarray(self.past[0].center)
+        # x1, y1, x2, y2 = ballpt[0], ballpt[1], pt2[0], pt2[1]
+        # coef = np.polyfit(past[:, 0], past[:, 1], deg=1)
+        # a, b = coef[0], coef[1]
+        # self.motion.coefficients = (a, b)
+        # y1 = int(a*x1 + b)
+        # y2 = int(a*x2 + b)
+        # intercept = x2, y2
+
         uppery = int(table.playbox[0][1])
         lowery = int(table.playbox[1][1])
 
-        speed = sum(self.speedlist) / len(self.speedlist)
-        collision = False
+        collision_wall = False
+        bouncelines = []
 
-        # if going left
-        if x1 < x2:
-            arrowx = int(self.center[0] - (speed * speedmultiplier))
-            borderx = int(table.playbox[0][0] + self.radius)
-            if arrowx > borderx:
-                x = arrowx
-                collision = False
+        # # if going left
+        # if x1 < x2:
+        #     arrowx = int(self.center[0] - vel)
+        #     borderx = int(table.playbox[0][0] + self.radius)
+        #     if arrowx > borderx:
+        #         x = arrowx
+        #         collision_wall = False
+        #     else:
+        #         x = int(table.playbox[0][0] + self.radius)
+        #         collision_wall = 'left'
+        #     y2 = int(x * a + b)
+        #     arrowy = int(arrowx * a + b)
+        #     tot_magnitude = norm(np.array((arrowx, arrowy)) - np.array(self.center))
+        #     intercept = (x, y2)
+        #
+        # # if going right
+        # elif x1 > x2:
+        #     arrowx = int(self.center[0] + vel)
+        #     borderx = int(table.playbox[1][0] - self.radius)
+        #     if arrowx < borderx:
+        #         x = arrowx
+        #         collision_wall = False
+        #     else:
+        #         x = borderx
+        #         collision_wall = 'right'
+        #     y2 = int(x * a + b)
+        #     arrowy = int(arrowx * a + b)
+        #     tot_magnitude = norm(np.array((arrowx, arrowy)) - np.array(self.center))
+        #     intercept = (x, y2)
+        #
+        # # if crossing upperbound before intersection with sides
+        # if y2 < uppery:
+        #     y2 = uppery + int(self.radius)
+        #     x = int((y2 - b) / a)
+        #     collision_wall = 'top'
+        #     intercept = (x, y2)
+        #
+        # # if crossing lowerbound before intersection with sides
+        # elif y2 > lowery:
+        #     y2 = lowery - int(self.radius)
+        #     x = int((y2 - b) / a)
+        #     collision_wall = 'bottom'
+        #     intercept = (x, y2)
+
+
+
+        # collision_wall = self.motion.collision
+        #
+        # tot_magnitude = self.motion.magnitude
+
+        intercept = self.check_wall_collision(past)
+        self.motionlines.append([self.center, intercept])
+        velocity = intercept - ballpt
+        if self.motion.collision:
+            bounceline = self.find_bounce(self.center, intercept)
+            intercept2 = self.check_wall_collision(bounceline)
+            newline = (intercept, intercept2)
+            self.motionlines.append(newline)
+            # if self.motion.collision:
+            #     bounceline2 = self.find_bounce(intercept, intercept2)
+            #     intercept3 = self.check_wall_collision(bounceline2)
+            #     newline = (intercept2, intercept3)
+            #     self.motionlines.append(newline)
+
+        for i in range(len(self.motionlines)):
+            line = self.motionlines[i]
+            if i < len(self.motionlines)-1:
+                # pass
+                cv.line(cur_frame, tuple(line[0]), tuple(line[1]), (255, 255, 255), 2)
             else:
-                x = int(table.playbox[0][0] + self.radius)
-                collision = 'left'
-            y2 = int(x * a + b)
-            intercept = (x, y2)
+                # pass
+                cv.arrowedLine(cur_frame, tuple(line[0]), tuple(line[1]), (255, 255, 255), 2, tipLength=0.05)
 
-        # if going right
-        elif x1 > x2:
-            arrowx = int(self.center[0] + (speed * speedmultiplier))
-            borderx = int(table.playbox[1][0] - self.radius)
-            if arrowx < borderx:
-                x = arrowx
-                collision = False
-            else:
-                x = borderx
-                collision = 'right'
-            y2 = int(x * a + b)
-            intercept = (x, y2)
-
-        # if crossing upperbound before intersection with sides
-        if y2 < uppery:
-            y2 = uppery + int(self.radius)
-            x = int((y2 - b) / a)
-            collision = 'top'
-            intercept = (x, y2)
-
-        # if crossing lowerbound before intersection with sides
-        elif y2 > lowery:
-            y2 = lowery - int(self.radius)
-            x = int((y2 - b) / a)
-            collision = 'bottom'
-            intercept = (x, y2)
-
-        self.motionline = (self.center, intercept)
         self.checkballsinpath()
 
-        intercept = np.array(intercept)
-
-        velocity = intercept - pball
-
-        if collision:
-            wall = table.walls[collision]
-            v_corner = np.array(wall[0]) - intercept
-            v_ball = pball - intercept
-            orth1 = np.array((v_corner[1], -v_corner[0]))
-            orth2 = np.array((-v_corner[1], v_corner[0]))
-            dot_left = orth1.dot(v_ball)
-            dot_right = orth2.dot(v_ball)
-            v_mirror = [orth1, orth2][np.argmax(np.array((dot_left, dot_right)))]
-            v_mirror_unitv = v_mirror / norm(v_mirror)
-            reflection = 2 * (v_ball.dot(v_mirror_unitv)) * v_mirror_unitv - v_ball
-            end_point = (intercept + reflection).astype('int')
-            cv.line(cur_frame, tuple(pball), tuple(intercept), (255, 255, 255), 2)
-            cv.arrowedLine(cur_frame, tuple(intercept), tuple(end_point), (255, 255, 255), 2, tipLength=0.05)
-
-        else:
-            cv.arrowedLine(cur_frame, tuple(pball), tuple(intercept), (255, 255, 255), 2, tipLength=0.05)
+        # if collision_wall:
+        #     col_magnitude = norm(np.array(intercept) - np.array(self.center))
+        #     bounce_magnitude = tot_magnitude - col_magnitude
+        #     wall = table.walls[collision_wall]
+        #     v_corner = np.array(wall[0]) - intercept
+        #     v_ball = ballpt - intercept
+        #     orth1 = np.array((v_corner[1], -v_corner[0]))
+        #     orth2 = np.array((-v_corner[1], v_corner[0]))
+        #     dot_1 = orth1.dot(v_ball)
+        #     dot_2 = orth2.dot(v_ball)
+        #     v_mirror = [orth1, orth2][np.argmax(np.array((dot_1, dot_2)))]
+        #     v_mirror_unitv = v_mirror / norm(v_mirror)
+        #
+        #     reflection = (2 * (v_ball.dot(v_mirror_unitv)) * v_mirror_unitv - v_ball)
+        #
+        #     reflection = reflection / norm(reflection) * bounce_magnitude
+        #     end_point = (intercept + reflection).astype('int')
+        #     cv.line(cur_frame, tuple(ballpt), tuple(intercept), (255, 255, 255), 2)
+        #     # bounceline = [tuple(intercept), tuple(end_point)]
+        #     # print('points', intercept, end_point)
+        #     cv.arrowedLine(cur_frame, tuple(intercept), tuple(end_point), (255, 255, 255), 2, tipLength=0.05)
+        #
+        # else:
+        #     cv.arrowedLine(cur_frame, tuple(ballpt), tuple(intercept), (255, 255, 255), 2, tipLength=0.05)
         if norm(velocity) == 0:
             velocity_unit = (0, 0)
         else:
@@ -1472,22 +1516,114 @@ class Ball(Circle):
             # print('var', var)
             self.variancehistory = np.append(self.variancehistory, var)
 
-    def checkballsinpath(self):
-        if self.motionline is not None:
-            p1 = np.asarray(self.motionline[0])
-            p2 = np.asarray(self.motionline[1])
-            for ball in table.balls:
-                if not ball.center == self.center:
-                    p3 = np.asarray(ball.center)
-                    # TODO: check
-                    if norm(p2 - p1) == 0:
-                        dist = 1000000
-                    else:
-                        dist = abs(norm(np.cross(p2 - p1, p1 - p3)) / norm(p2 - p1))
-                    if dist < self.radius + ball.radius:
-                        ball.collisioncourse = True
-                    else:
-                        ball.collisioncourse = False
+    def checkballsinpath(self, lines=None):
+        count = 0
+        if lines is None:
+            lines = self.motionlines
+        if len(lines) != 0:
+            for line in lines:
+                count += 1
+                print('count:', count)
+                p1 = np.asarray(line[0])
+                p2 = np.asarray(line[1])
+                for ball in table.balls:
+                    if not ball.center == self.center:
+                        p3 = np.asarray(ball.center)
+                        # TODO: check
+                        if norm(p2 - p1) == 0:
+                            dist = 1000000
+                        else:
+                            dist = abs(norm(np.cross(p2 - p1, p1 - p3)) / norm(p2 - p1))
+                        if dist < self.radius + ball.radius:
+                            ball.collisioncourse = True
+                        else:
+                            ball.collisioncourse = False
+
+    def check_wall_collision(self, pts):
+        pts = np.array(pts)
+        x1, x2 = pts[-1, 0], pts[1, 0]
+        # print('pts', pts)
+        coef = np.polyfit(pts[:, 0], pts[:, 1], deg=1)
+        a, b = coef[0], coef[1]
+        y2 = int(a * x2 + b)
+        # print('y2', y2)
+        intercept = pts[-1]
+        # print('defintercept', intercept)
+        vel = self.motion.speed
+        # if going left
+        if x1 < x2:
+            arrowx = int(self.center[0] - vel)
+            borderx = int(table.playbox[0][0] + self.radius)
+            if arrowx > borderx:
+                x = arrowx
+                self.motion.collision = False
+            else:
+                x = int(table.playbox[0][0] + self.radius)
+                self.motion.collision = 'left'
+            y2 = int(x * a + b)
+            arrowy = int(arrowx * a + b)
+            tot_magnitude = norm(np.array((arrowx, arrowy)) - np.array(self.center))
+            intercept = (x, y2)
+
+        # if going right
+        elif x1 > x2:
+            arrowx = int(self.center[0] + vel)
+            borderx = int(table.playbox[1][0] - self.radius)
+            if arrowx < borderx:
+                x = arrowx
+                self.motion.collision = False
+            else:
+                x = borderx
+                self.motion.collision = 'right'
+            y2 = int(x * a + b)
+            arrowy = int(arrowx * a + b)
+            tot_magnitude = norm(np.array((arrowx, arrowy)) - np.array(self.center))
+            intercept = (x, y2)
+        else:
+            tot_magnitude = 0
+            self.motion.collision = False
+
+        self.motion.magnitude = tot_magnitude
+        uppery = int(table.playbox[0][1])
+        lowery = int(table.playbox[1][1])
+
+        if y2 < uppery:
+            y2 = uppery + int(self.radius)
+            x = int((y2 - b) / a)
+            self.motion.collision = 'top'
+            intercept = (x, y2)
+
+        # if crossing lowerbound before intersection with sides
+        elif y2 > lowery:
+            y2 = lowery - int(self.radius)
+            x = int((y2 - b) / a)
+            self.motion.collision = 'bottom'
+            intercept = (x, y2)
+
+        print('postintercept', intercept)
+        print('collision', self.motion.collision)
+        intercept = np.array(intercept)
+        return intercept
+
+    def find_bounce(self, startpt, intercept):
+        col_magnitude = norm(np.array(intercept) - np.array(startpt))
+        bounce_magnitude = self.motion.magnitude - col_magnitude
+        wall = table.walls[self.motion.collision]
+        v_corner = np.array(wall[0]) - intercept
+        v_ball = np.array(startpt) - intercept
+        orth1 = np.array((v_corner[1], -v_corner[0]))
+        orth2 = np.array((-v_corner[1], v_corner[0]))
+        dot_1 = orth1.dot(v_ball)
+        dot_2 = orth2.dot(v_ball)
+        v_mirror = [orth1, orth2][np.argmax(np.array((dot_1, dot_2)))]
+        v_mirror_unitv = v_mirror / norm(v_mirror)
+
+        reflection = (2 * (v_ball.dot(v_mirror_unitv)) * v_mirror_unitv - v_ball)
+
+        reflection = reflection / norm(reflection) * bounce_magnitude
+        end_point = (intercept + reflection).astype('int')
+        bounceline = [tuple(intercept), tuple(end_point)]
+        return bounceline
 
 
 class Buffer(list):
@@ -1524,10 +1660,13 @@ class Buffer(list):
 
 
 class Motion:
-    def __init__(self, speed=None, direction=None, coefficients=None):
+    def __init__(self, vector=None, speed=None, direction=None, coefficients=None):
+        self.vector = vector
         self.speed = speed
         self.direction = direction
         self.coefficients = coefficients
+        self.collision = False
+
 
     # def detect_collision(self):
 
@@ -1600,6 +1739,8 @@ def play_frame():
     ret, frame = cap.read()
     print('frame:', framenum)
     if ret:
+
+        # time.sleep(0.0001 * slowdown)
         cur_frame = frame
         cleanframe = frame.copy()
         # cv.imwrite('./cleanframe.png', cleanframe)
