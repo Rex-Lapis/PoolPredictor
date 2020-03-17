@@ -24,7 +24,7 @@ ballcolors = [(230, 230, 225), (45, 25, 35), (160, 85, 50), (65, 85, 160), (60, 
 
 debuglist = []
 
-filepath = './clips/2019_PoolChamp_Clip10.mp4'
+filepath = './clips/2019_PoolChamp_Clip9.mp4'
 unintruded = cv.imread('./cleanframe.png')
 
 # Used to calculate the color difference of some potential ball to the table
@@ -58,21 +58,6 @@ framenum = 0
 #  Table class is getting a bit big and unfocused.
 # TODO: Have the colorthresh adapt to whether or not a ball is a blurry doublecircle
 
-
-# class TempArray(np.core.multiarray.array):
-#     def append(self, other):
-#         self = np.append(self, other)
-#
-#     def pop(self, i):
-#         if i < len(self) - 1:
-#             self = np.concatenate(self[:i], self[i + 1:])
-#         else:
-#             self = self[:i]
-#
-# def array(*args, **kwargs):
-#     return TempArray(*args, **kwargs)
-
-# np.array = array
 
 class Table:
     def __init__(self, setting_num=0):
