@@ -9,7 +9,7 @@ Looks at overhead video of billiards table, detects boundaries and balls, and pr
 
 
 # The Algorithm:
-## 1. Take a few frames, and do analysis for straight lines with the correct distance ratios and relative angles as a pool table would.
+## 1. Take a few frames, and do analysis for straight lines with the distance ratios and relative angles as a pool table would have.
 ## 2. Separate found lines into bumper, pocket, and table edge lines.
 ## 3. Identify pocket areas based on line intersections and lengths between intersections.
 ## 4. Start checking frames live, looking only within the table boundaries for circles.
