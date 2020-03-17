@@ -5,6 +5,7 @@ Looks at overhead video of billiards table, detects boundaries and balls, and pr
 ### Currently, it will play the video, circling each ball with it's color, and draw trajectories when the ball starts moving. It currently does a decent job with single bounce reflections, but the bounce algorithm still needs to be made recursive. Balls turn red when they are going to be hit by a ball in motion. This area still needs a little work as well. OpenGL is required to acheive necessary speed, and so it may not run out of the box.
 
 <br/>
+### Example:
 ![Demo Gif](/doc_resources/PoolGif1.gif)
 
 
