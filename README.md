@@ -1,6 +1,10 @@
 # PoolPredictor
 Looks at overhead video of billiards table, detects boundaries and balls, and predicts the angles and motion of balls. 
 
+## This is the old version
+I wrote this a long time ago, and I'm working on a re-write that meets my current standards. If you are here to evaluate my code quality as a potential hire, see 
+[my SmartCue Repo](https://github.com/TheDitis/SmartCue)
+
 ## Still under construction!
 ### Currently, it will play the video, circling each ball with it's color, and draw trajectories when the ball starts moving. It currently does a decent job with single bounce reflections, but the bounce algorithm still needs to be made recursive. The reflection algorithm also needs to be tweaked so that the reflection vector doesn't grow larger as the ball approaches the wall. Balls turn red when they are going to be hit by a ball in motion. This area still needs a little work as well. OpenGL is required to acheive necessary speed, and so it may not run out of the box.
 
